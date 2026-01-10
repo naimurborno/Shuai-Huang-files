@@ -22,9 +22,9 @@ if __name__ == "__main__":
     # Get the config file
     config = train_config.config
     train_loader, val_loader, test_loader = create_dataloaders(
-    label_data_dir="/content/Dataset_shuai_zip/label.mat",
-    feature_data_dir="/content/Dataset_shuai_zip/Features",
-    cluster_data_dir="/content/Dataset_shuai_zip/Cluster_index_mat/",
+    label_data_dir=config['label_data_dir'],
+    feature_data_dir=config['feature_data_dir'],
+    cluster_data_dir=config['cluster_data_dir'],
     batch_size=8,
     load_cluster=False,       # ← Set True only if you really need it
 )
