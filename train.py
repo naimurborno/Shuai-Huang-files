@@ -9,8 +9,9 @@ from torch import cuda
 from tqdm import tqdm
 from datetime import datetime
 import os 
-from data_loader import Dataset, DataLoader
+# from data_loader import Dataset, DataLoader
 import train_config
+from dataloader import create_dataloaders
 # Filter the warning.
 import warnings
 
@@ -20,6 +21,22 @@ warnings.filterwarnings(
 if __name__ == "__main__":
     # Get the config file
     config = train_config.config
-    config["n_epochs"] =1# config['n_lin_epoch'] + config['n_dec_epoch']
-    # Set Path for data
-    root = config["data_path"]
+    train_loader, val_loader, test_loader = create_dataloaders(
+    label_data_dir="/content/Dataset_shuai_zip/label.mat",
+    feature_data_dir="/content/Dataset_shuai_zip/Features",
+    cluster_data_dir="/content/Dataset_shuai_zip/Cluster_index_mat/",
+    batch_size=8,
+    load_cluster=False,       # ← Set True only if you really need it
+)
+
+    # Get one batch to verify
+    batch = next(iter(train_loader))
+
+    print("\nBatch shapes:")
+    print(f"features    : {batch['features'].shape}")     # [batch, 400, 1632]
+    print(f"labels      : {batch['label'].shape}")        # [batch]
+    print(f"subject_ids : {batch['subject_id']}")
+
+    if 'cluster_map' in batch:
+        print(f"cluster_map : {batch['cluster_map'].shape}")
+
