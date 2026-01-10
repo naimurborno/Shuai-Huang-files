@@ -52,8 +52,9 @@ class BrainROIDataset(Dataset):
 
         # Load global labels once
         label_path = self.data_dir
-        if not os.path.exists(label_path):
-            raise FileNotFoundError(f"Label file not found: {label_path}")
+        print(label_path)
+        # if not os.path.exists(label_path):
+        #     raise FileNotFoundError(f"Label file not found: {label_path}")
 
         labels_mat = sio.loadmat(label_path)
         self.labels = labels_mat['label'].flatten().astype(np.int64)  # shape (500,)
@@ -142,7 +143,6 @@ def create_dataloaders(
     )
 
     print(f"Dataset split → Train: {len(train_subjs)} | Val: {len(val_subjs)} | Test: {len(test_subjs)}")
-
     train_ds = BrainROIDataset(train_subjs, label_data_dir, feature_data_dir, cluster_data_dir, load_cluster=load_cluster)
     val_ds   = BrainROIDataset(val_subjs,   label_data_dir, feature_data_dir, cluster_data_dir, load_cluster=load_cluster)
     test_ds  = BrainROIDataset(test_subjs,  label_data_dir, feature_data_dir, cluster_data_dir, load_cluster=load_cluster)
