@@ -53,8 +53,8 @@ class BrainROIDataset(Dataset):
         # Load global labels once
         label_path = self.data_dir
         print(label_path)
-        # if not os.path.exists(label_path):
-        #     raise FileNotFoundError(f"Label file not found: {label_path}")
+        if not os.path.exists(label_path):
+            raise FileNotFoundError(f"Label file not found: {label_path}")
 
         labels_mat = sio.loadmat(label_path)
         self.labels = labels_mat['label'].flatten().astype(np.int64)  # shape (500,)
