@@ -50,10 +50,10 @@ def construct_brain_map(C, F_roi):
     # pad background vector
     zero = torch.zeros(B, 1, D, device=device)
     F_pad = torch.cat([zero, F_roi], dim=1)  # (B, 401, D)
-    print(C.shape)
+    # print(C.shape)
     batch_idx=torch.arange(B,device=device).view(B,1,1,1)
     Q=F_pad[batch_idx, C]
-    print(Q.shape)
+    # print(Q.shape)
     # print(D.shape)
     # indexing
     # Q = F_pad.gather(
