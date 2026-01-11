@@ -9,7 +9,7 @@ from collections import defaultdict
 from torch import cuda
 from tqdm import tqdm
 from datetime import datetime
-from Atlass-free-Transformer import AtlasFreeBrainTransformer
+from AFT import AtlasFreeBrainTransformer
 import os 
 # from data_loader import Dataset, DataLoader
 import train_config
