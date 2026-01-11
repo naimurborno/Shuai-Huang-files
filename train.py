@@ -10,6 +10,7 @@ from torch import cuda, nn,optim
 from tqdm import tqdm
 from datetime import datetime
 from AFT import AtlasFreeBrainTransformer
+from torch_pca import PCA
 from APPLY_PCA import apply_pca
 import os 
 # from data_loader import Dataset, DataLoader
@@ -24,6 +25,7 @@ warnings.filterwarnings(
 if __name__ == "__main__":
     # Get the config file
     config = train_config.config
+    pca_model=PCA(n_components=config['n_components'])
     train_loader, val_loader, test_loader = create_dataloaders(
                                             label_data_dir=config['label_data_dir'],
                                             feature_data_dir=config['feature_data_dir'],
@@ -46,7 +48,7 @@ if __name__ == "__main__":
             cluster_map=batch['cluster_map'].to(device)
             cluster_map=cluster_map.to(torch.long)
 
-            features=apply_pca(features) #Apply PCA to reduce dimensionality
+            features=apply_pca(features,pca_model=pca_model,train_data=True) #Apply PCA to reduce dimensionality
 
             outputs=model(features, cluster_map) #Get prediction from the model
             # _, predicted=torch.max(outputs, dim=1)

@@ -115,7 +115,7 @@ def create_dataloaders(
     feature_data_dir,
     cluster_data_dir,
     batch_size: int = 16,
-    num_workers: int = 4,
+    num_workers: int = 0,
     pin_memory: bool = True,
     load_cluster: bool = False,
     val_size: float = 0.15,
