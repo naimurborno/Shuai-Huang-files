@@ -44,7 +44,7 @@ if __name__ == "__main__":
         print(f"cluster_map : {batch['cluster_map'].shape}")
 
     F=apply_pca(batch['features'])    
-    model = AtlasFreeBrainTransformer(use_pca=True)
+    model = AtlasFreeBrainTransformer()
     
     # F = torch.randn(2, 400, 1632)
     # C = torch.randint(0, 401, (2, 45, 54, 45))

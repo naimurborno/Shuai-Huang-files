@@ -118,8 +118,7 @@ class AtlasFreeBrainTransformer(nn.Module):
         embed_dim=128,
         num_heads=4,
         depth=4,
-        num_classes=2,
-        use_pca=False
+        num_classes=2
     ):
         super().__init__()
         self.roi_embed = ROIEmbedding(
