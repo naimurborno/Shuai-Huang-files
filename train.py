@@ -51,7 +51,7 @@ if __name__ == "__main__":
     
     # F = torch.randn(2, 400, 1632)
     # C = torch.randint(0, 401, (2, 45, 54, 45))
-
+    batch['cluster_map']=batch['cluster_map'].to(torch.long)
     logits = model(F, batch['cluster_map'])
     print(logits)  # (2, 2)
     
