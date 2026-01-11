@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     if 'cluster_map' in batch:
         print(f"cluster_map : {batch['cluster_map'].shape}")
-    model = AtlasFreeBrainTransformer()
+    model = AtlasFreeBrainTransformer(use_pca=True)
 
     F = torch.randn(2, 400, 1632)
     C = torch.randint(0, 401, (2, 45, 54, 45))
