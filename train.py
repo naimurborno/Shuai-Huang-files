@@ -6,7 +6,7 @@ from torch.optim import AdamW
 from sklearn.metrics import accuracy_score, classification_report
 from torch import nn
 from collections import defaultdict
-from torch import cuda
+from torch import cuda, nn,optim
 from tqdm import tqdm
 from datetime import datetime
 from AFT import AtlasFreeBrainTransformer
@@ -30,7 +30,38 @@ if __name__ == "__main__":
                                             cluster_data_dir=config['cluster_data_dir'],
                                             batch_size=config['batch_size']
                                         )
-    print(train_loader.shape)
+    device=torch.device("cuda" if torch.cuda.is_available() else "cpu") #Check if cuda is available
+
+    model=AtlasFreeBrainTransformer().to(device)
+    loss_func=nn.CrossEntropyLoss()
+    optimizer=optim.AdamW(model.parameters(),lr=1e-4)
+    for epoch in range(config['Epochs']):
+        model.train()
+        running_loss=0.0
+        loop=tqdm(train_loader, desc=f"Epoch [{epoch+1}/{config['Epochs']}]")
+        for batch in loop:
+            features=batch['features'].to(device)
+            labels=batch['label'].to(device)
+            cluster_map=batch['cluster_map'].to(device)
+            cluster_map=cluster_map.to(torch.long)
+
+            features=apply_pca(features) #Apply PCA to reduce dimensionality
+
+            outputs=model(features, cluster_map) #Get prediction from the model
+
+            loss=loss_func(outputs,labels)
+
+            loss.backwards()
+
+            optimizer.step()
+            running_loss+=loss.item()
+            loop.set_postfix(loss=loss.item())
+        print(f"Epoch {epoch+1} Complete. Average Loss: {running_loss/len(train_loader):.4f}")
+
+
+
+
+
     
     # Get one batch to verify
     # batch = next(iter(train_loader))

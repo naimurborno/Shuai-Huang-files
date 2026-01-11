@@ -10,3 +10,4 @@ config['label_data_dir']="/content/Dataset_shuai_zip/label.mat"
 config['feature_data_dir']="/content/Dataset_shuai_zip/Features"
 config['cluster_data_dir']="/content/Dataset_shuai_zip/Cluster_index_mat/"
 config['batch_size']=8
+config['Epochs']=10
