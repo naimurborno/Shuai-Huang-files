@@ -41,7 +41,8 @@ if __name__ == "__main__":
         loop=tqdm(train_loader, desc=f"Epoch [{epoch+1}/{config['Epochs']}]")
         for batch in loop:
             features=batch['features'].to(device)
-            labels=batch['label'].to(device)
+            labels=batch['label']-1
+            labels=labels.to(device)
             cluster_map=batch['cluster_map'].to(device)
             cluster_map=cluster_map.to(torch.long)
 
