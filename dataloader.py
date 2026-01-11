@@ -52,7 +52,7 @@ class BrainROIDataset(Dataset):
 
         # Load global labels once
         label_path = self.data_dir
-        print(label_path)
+        # print(label_path)
         if not os.path.exists(label_path):
             raise FileNotFoundError(f"Label file not found: {label_path}")
 
@@ -132,7 +132,8 @@ def create_dataloaders(
     Returns:
         (train_loader, val_loader, test_loader)
     """
-    all_subjects = list(range(1, 501))  # 1 to 500
+    exclude={4, 6, 173, 175, 211, 232, 293, 319, 344, 378, 381, 391, 427, 461}
+    all_subjects = [i for i in range(1, 501) if i not in exclude]  # 1 to 500
 
     # Stratified split (though binary labels, still good practice)
     train_subjs, temp_subjs = train_test_split(
