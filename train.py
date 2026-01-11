@@ -48,6 +48,7 @@ if __name__ == "__main__":
             features=apply_pca(features) #Apply PCA to reduce dimensionality
 
             outputs=model(features, cluster_map) #Get prediction from the model
+            _, predicted=torch.max(outputs, dim=1)
             print("shape of output:", outputs.shape)
             print("outputs:",outputs)
             print("labels:",labels)
