@@ -46,8 +46,8 @@ if __name__ == "__main__":
     F=apply_pca(batch['features'])    
     model = AtlasFreeBrainTransformer(use_pca=True)
     
-    F = torch.randn(2, 400, 1632)
-    C = torch.randint(0, 401, (2, 45, 54, 45))
+    # F = torch.randn(2, 400, 1632)
+    # C = torch.randint(0, 401, (2, 45, 54, 45))
 
     logits = model(F, C)
     print(logits)  # (2, 2)

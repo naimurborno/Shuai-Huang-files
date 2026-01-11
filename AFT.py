@@ -89,8 +89,6 @@ class BlockPooling(nn.Module):
 
         Q = Q.flatten(2).transpose(1, 2)  # (B, num_blocks, D)
         return Q
-
-
 # --------------------------------------------------
 # 4. Transformer Encoder
 # --------------------------------------------------
@@ -124,8 +122,6 @@ class AtlasFreeBrainTransformer(nn.Module):
         use_pca=False
     ):
         super().__init__()
-        self.use_pca=use_pca
-        self.pca=PCA(n_components=256, whiten=True)
         self.roi_embed = ROIEmbedding(
             in_dim=roi_feat_dim,
             out_dim=embed_dim
