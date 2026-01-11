@@ -75,6 +75,8 @@ if __name__ == "__main__":
                 features=batch['features'].to(device)
                 features=apply_pca(features,pca_model=pca_model,train_data=False)
                 labels=batch['label']-1
+                cluster_map=batch['cluster_map'].to(device)
+                cluster_map=cluster_map.to(torch.long)
                 labels=labels.to(device)
                 outputs=model(features)
                 _,predicted=torch.max(outputs.data, 1)
