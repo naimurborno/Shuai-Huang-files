@@ -78,7 +78,7 @@ if __name__ == "__main__":
                 cluster_map=batch['cluster_map'].to(device)
                 cluster_map=cluster_map.to(torch.long)
                 labels=labels.to(device)
-                outputs=model(features)
+                outputs=model(features,cluster_map)
                 _,predicted=torch.max(outputs.data, 1)
                 total+=labels.size(0)
                 correct+=(predicted==labels).sum().item()
