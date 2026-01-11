@@ -49,7 +49,7 @@ if __name__ == "__main__":
             features=apply_pca(features) #Apply PCA to reduce dimensionality
 
             outputs=model(features, cluster_map) #Get prediction from the model
-            _, predicted=torch.max(outputs, dim=1)
+            # _, predicted=torch.max(outputs, dim=1)
             print("shape of output:", outputs.shape)
             print("outputs:",outputs)
             print("labels:",labels)
@@ -64,6 +64,23 @@ if __name__ == "__main__":
             running_loss+=loss.item()
             loop.set_postfix(loss=loss.item())
         print(f"Epoch {epoch+1} Complete. Average Loss: {running_loss/len(train_loader):.4f}")
+
+        model.eval()
+        with torch.no_grad():
+            correct=0
+            total=0
+            for batch in val_loader:
+                features=batch['features'].to(device)
+                labels=batch['label']-1
+                labels=labels.to(device)
+                outputs=model(features)
+                _,predicted=torch.max(outputs.data, 1)
+                total+=labels.size(0)
+                correct+=(predicted==labels).sum().item()
+            print(f"Validation Accuracy: {100*correct / total:.2f}%")
+        
+
+    
 
 
 
