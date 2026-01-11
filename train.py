@@ -34,7 +34,7 @@ if __name__ == "__main__":
 
     # Get one batch to verify
     batch = next(iter(train_loader))
-
+    print(batch.keys())
     print("\nBatch shapes:")
     print(f"features    : {batch['features'].shape}")     # [batch, 400, 1632]
     print(f"labels      : {batch['label'].shape}")        # [batch]
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     # F = torch.randn(2, 400, 1632)
     # C = torch.randint(0, 401, (2, 45, 54, 45))
 
-    logits = model(F, C)
+    logits = model(F, batch['cluster_map'])
     print(logits)  # (2, 2)
     
 
