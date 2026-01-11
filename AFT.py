@@ -144,10 +144,6 @@ class AtlasFreeBrainTransformer(nn.Module):
         F_roi: (B, 400, 1632)
         C: (B, 45, 54, 45)
         """
-        print("This is the shape at first:",F_roi.shape)
-        if self.use_pca==True:
-            pca_model=PCA(n_components=0.95, svd_solver='full')
-            F_roi=pca_model.fit_transform(F_roi)
         print("Shape After applying PCA:",F_roi.shape)
 
         # 1. ROI embedding
