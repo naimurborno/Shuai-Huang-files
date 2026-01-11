@@ -75,6 +75,10 @@ class BrainROIDataset(Dataset):
 
         feat_data = np.load(feature_path,allow_pickle=True)
         features=feat_data.item()['feature_mat']
+        if features.shape[0]!=400:
+            D=features.shape[1]
+            zero_row=np.zeros((1,D),dtype=features.dtype)
+            features=np.vstack([F, zero_row])
         # features = feat_data[self.feature_key].astype(np.float32)  # (400, 1632)
         
         cluster_path=os.path.join(self.cluster_data, f"s_{sid}_cluster_index.npy")
