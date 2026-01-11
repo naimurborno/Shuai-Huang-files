@@ -9,6 +9,7 @@ from collections import defaultdict
 from torch import cuda
 from tqdm import tqdm
 from datetime import datetime
+from Atlass-free-Transformer import AtlasFreeBrainTransformer
 import os 
 # from data_loader import Dataset, DataLoader
 import train_config
@@ -40,4 +41,12 @@ if __name__ == "__main__":
 
     if 'cluster_map' in batch:
         print(f"cluster_map : {batch['cluster_map'].shape}")
+    model = AtlasFreeBrainTransformer()
+
+    F = torch.randn(2, 400, 1632)
+    C = torch.randint(0, 401, (2, 45, 54, 45))
+
+    logits = model(F, C)
+    print(logits)  # (2, 2)
+    
 
