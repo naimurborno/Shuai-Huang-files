@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch_pca import PCA
+import train_config
 
 # --------------------------------------------------
 # 1. ROI Embedding Network (FNN)
@@ -15,6 +16,7 @@ from torch_pca import PCA
 #     pca=PCA(n_components=n_components, whiten=True)
 #     pca.fit(roi_features)
 #     return pca
+config = train_config.config
 class ROIEmbedding(nn.Module):
     def __init__(self, in_dim=1632, hidden_dim=512, out_dim=128):
         super().__init__()
@@ -147,31 +149,38 @@ class AtlasFreeBrainTransformer(nn.Module):
         F_roi: (B, 400, 1632)
         C: (B, 45, 54, 45)
         """
+        print("This is the shape at first:",F_roi.shape)
         if self.use_pca==True:
             pca_model=PCA(n_components=0.95, svd_solver='full')
             F_roi=pca_model.fit_transform(F_roi)
+        print("Shape After applying PCA:",F_roi.shape)
 
         # 1. ROI embedding
         F_emb = self.roi_embed(F_roi)  # (B, 400, D)
+        print("Shape After passing through the FNN",F_emb.shape)
 
         # 2. Construct voxel brain map
         Q = construct_brain_map(C, F_emb)  # (B, 45, 54, 45, D)
+        print("shape After Constructing the brain map:",Q.shape)
 
         # 3. Block pooling
         Q=Q.permute(0,4,1,2,3)
+        print("Shape After the permute function:",Q.shape)
         tokens=self.pool(Q)
         # tokens = self.block_pool(Q)  # (B, N, D)
-        print(tokens.shape)
+        print("Shape after pooling function:",tokens.shape)
         tokens=tokens.flatten(2)
-        print(tokens.shape)
+        print("shape after the flatten function:",tokens.shape)
         tokens=tokens.transpose(1,2)
-        print(tokens.shape)
+        print("Shape After the transpose function and ready to be fet in transformer:",tokens.shape)
 
         # 4. Transformer
         tokens = self.transformer(tokens)  # (B, N, D)
+        print("Shape after transpose and after transformer section:",tokens.shape)
 
         # 5. Subject-level pooling
         h = tokens.mean(dim=1)  # (B, D)
+        print("shape after subject level pooling:", h.shape)
 
         # 6. Classification
         out = self.classifier(h)
