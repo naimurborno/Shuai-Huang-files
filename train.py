@@ -37,8 +37,11 @@ if __name__ == "__main__":
     print(batch.keys())
     print("\nBatch shapes:")
     print(f"features    : {batch['features'].shape}")     # [batch, 400, 1632]
-    print(f"labels      : {batch['label'].shape}")        # [batch]
+    print(f"labels      : {batch['label'].shape}") 
+    print(f"cluster     : {batch['cluster_map'].shape}")       # [batch]
     print(f"subject_ids : {batch['subject_id']}")
+    print(f"feature dtype: {batch['features'].dtype}")
+    print(f"cluster dtype: {batch['cluster_map'].dtype}")
 
     if 'cluster_map' in batch:
         print(f"cluster_map : {batch['cluster_map'].shape}")
