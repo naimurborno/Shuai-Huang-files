@@ -10,6 +10,7 @@ from torch import cuda
 from tqdm import tqdm
 from datetime import datetime
 from AFT import AtlasFreeBrainTransformer
+from APPLY_PCA import apply_pca
 import os 
 # from data_loader import Dataset, DataLoader
 import train_config
@@ -41,8 +42,10 @@ if __name__ == "__main__":
 
     if 'cluster_map' in batch:
         print(f"cluster_map : {batch['cluster_map'].shape}")
-    model = AtlasFreeBrainTransformer(use_pca=True)
 
+    F=apply_pca(batch['features'])    
+    model = AtlasFreeBrainTransformer(use_pca=True)
+    
     F = torch.randn(2, 400, 1632)
     C = torch.randint(0, 401, (2, 45, 54, 45))
 
