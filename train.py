@@ -52,10 +52,10 @@ if __name__ == "__main__":
 
             outputs=model(features, cluster_map) #Get prediction from the model
             # _, predicted=torch.max(outputs, dim=1)
-            print("shape of output:", outputs.shape)
-            print("outputs:",outputs)
-            print("labels:",labels)
-            print("shape of labels:", labels.shape)
+            # print("shape of output:", outputs.shape)
+            # print("outputs:",outputs)
+            # print("labels:",labels)
+            # print("shape of labels:", labels.shape)
 
 
             loss=loss_func(outputs,labels)
@@ -73,6 +73,7 @@ if __name__ == "__main__":
             total=0
             for batch in val_loader:
                 features=batch['features'].to(device)
+                features=apply_pca(features,pca_model=pca_model,train_data=False)
                 labels=batch['label']-1
                 labels=labels.to(device)
                 outputs=model(features)
