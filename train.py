@@ -48,6 +48,9 @@ if __name__ == "__main__":
             features=apply_pca(features) #Apply PCA to reduce dimensionality
 
             outputs=model(features, cluster_map) #Get prediction from the model
+            print("shape of output:", outputs.shape)
+            print("shape of labels:", labels.shape)
+
 
             loss=loss_func(outputs,labels)
 
