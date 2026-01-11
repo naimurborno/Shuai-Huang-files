@@ -99,6 +99,7 @@ class BrainROIDataset(Dataset):
         # Prepare output
         item = {
             'features': torch.from_numpy(features),     # [400, 1632]
+            'cluster_map' : torch.from_numpy(clusters_matrix),
             'label': torch.tensor(label, dtype=torch.long),
             'subject_id': sid
         }
