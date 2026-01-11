@@ -49,6 +49,8 @@ if __name__ == "__main__":
 
             outputs=model(features, cluster_map) #Get prediction from the model
             print("shape of output:", outputs.shape)
+            print("outputs:",outputs)
+            print("labels:",labels)
             print("shape of labels:", labels.shape)
 
 
