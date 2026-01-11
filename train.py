@@ -55,7 +55,7 @@ if __name__ == "__main__":
             print("shape of labels:", labels.shape)
 
 
-            loss=loss_func(outputs,labels)
+            loss=loss_func(predicted,labels)
 
             loss.backwards()
 
