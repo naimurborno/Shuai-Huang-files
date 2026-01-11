@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
             loss=loss_func(outputs,labels)
 
-            loss.backwards()
+            loss.backward()
 
             optimizer.step()
             running_loss+=loss.item()
