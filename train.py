@@ -33,10 +33,11 @@ if __name__ == "__main__":
                                             batch_size=config['batch_size']
                                         )
     device=torch.device("cuda" if torch.cuda.is_available() else "cpu") #Check if cuda is available
+    print("Selected Device:", device)
 
     model=AtlasFreeBrainTransformer().to(device)
     loss_func=nn.CrossEntropyLoss()
-    optimizer=optim.AdamW(model.parameters(),lr=1e-4)
+    optimizer=optim.AdamW(model.parameters(),lr=1e-6)
     for epoch in range(config['Epochs']):
         model.train()
         running_loss=0.0
