@@ -29,11 +29,29 @@ class ROIEmbedding(nn.Module):
     def forward(self, F_roi):
         # F_roi: (B, 400, 1632)
         return self.net(F_roi)  # (B, 400, out_dim)
+class PositionalEncoding(nn.Module):
+    def __init__(self, dim, max_tokens=1000):
+        super().__init__()
+        self.pos_embed=nn.Parameter(
+            torch.randn(1,max_tokens,dim)
+        )
+
 
 
 # --------------------------------------------------
 # 2. ROI → Voxel Projection (Q construction)
 # --------------------------------------------------
+def extract_nodes(Q, kernel_size=3, stride=2):
+    batch_size, channels, d,h,w=Q.shape
+    blocks=Q.unfold(2,kernel_size,stride).unfold(3, kernel_size,stride).unfold(4,kernel_size,stride)
+    node_features=blocks.sum(dim=(-3,-2,-1))
+    node_features= node_features.reshape(batch_size, channels, -1)
+    node_features= node_features.permute(0,2,1)
+    with torch.no_grad():
+        mask=node_features.abs().sum(dim=-1) > 0
+        valid_indices=torch.where(mask)
+    final_nodes=node_features[:,valid_indices,:]
+    return final_nodes
 
 def construct_brain_map(C, F_roi):
     """
@@ -77,17 +95,17 @@ class BlockPooling(nn.Module):
     def forward(self, Q):
         # Q: (B, X, Y, Z, D)
         B, X, Y, Z, D = Q.shape
-        print()
+        # print()
 
         Q = Q.permute(0, 4, 1, 2, 3)  # (B, D, X, Y, Z)
-        print("the shape of Q:", Q.shape)
+        # print("the shape of Q:", Q.shape)
 
         Q = F.avg_pool3d(
             Q,
             kernel_size=self.block_size,
             stride=self.stride
         )
-        print("The shape of Q after pooling:",Q.shape)
+        # print("The shape of Q after pooling:",Q.shape)
         Q=Q*self.block_size*self.block_size*self.block_size
 
         Q = Q.flatten(2).transpose(1, 2)  # (B, num_blocks, D)
@@ -159,10 +177,11 @@ class AtlasFreeBrainTransformer(nn.Module):
 
         # 3. Block pooling
         # Q=Q.permute(0,4,1,2,3)
-        print("Shape After the permute function:",Q.shape)
+        # print("Shape After the permute function:",Q.shape)
         # tokens=self.pool(Q)
-        tokens = self.block_pool(Q)  # (B, N, D)
-        print("Shape after pooling function:",tokens.shape)
+        tokens=extract_nodes(Q, kernel_size=3, stride=2)
+        # tokens = self.block_pool(Q)  # (B, N, D)
+        # print("Shape after pooling function:",tokens.shape)
         # tokens=tokens.flatten(2)
         # print("shape after the flatten function:",tokens.shape)
         # tokens=tokens.transpose(1,2)
