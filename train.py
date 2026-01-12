@@ -27,22 +27,12 @@ if __name__ == "__main__":
     config = train_config.config
     device=torch.device("cuda" if torch.cuda.is_available() else "cpu") #Check if cuda is available
     print("Selected Device:", device)
-    pca_model=PCA(n_components=config['n_components'])
     train_loader, val_loader, test_loader = create_dataloaders(
                                             label_data_dir=config['label_data_dir'],
                                             feature_data_dir=config['feature_data_dir'],
                                             cluster_data_dir=config['cluster_data_dir'],
                                             batch_size=config['batch_size']
                                         )
-    # all_train_features=[]
-    # for batch in train_loader:
-    #     features=batch['features'].to(device)
-    #     all_train_features.append(features)
-    # all_train_features=torch.cat(all_train_features,dim=0)
-    # B,T,F=all_train_features.shape
-    # all_train_features=all_train_features.view(B*T,F)
-    # print(all_train_features.shape)
-    # pca_model.fit(all_train_features)
     model=AtlasFreeBrainTransformer().to(device)
     loss_func=nn.CrossEntropyLoss()
     optimizer=optim.Adam(model.parameters(),lr=1e-6)
@@ -57,21 +47,10 @@ if __name__ == "__main__":
             labels=labels.to(device)
             cluster_map=batch['cluster_map'].to(device)
             cluster_map=cluster_map.to(torch.long)
-            # features=apply_pca(features,pca_model=pca_model,train_data=True) #Apply PCA to reduce dimensionality
-            # print("Data size after applying PCA:", features.shape)
             outputs=model(features, cluster_map) #Get prediction from the model
-            # _, predicted=torch.max(outputs, dim=1)
-            # print("shape of output:", outputs.shape)
-            # print("outputs:",outputs)
-            # print("labels:",labels)
-            # print("shape of labels:", labels.shape)
-
-
             loss=loss_func(outputs,labels)
             optimizer.zero_grad()
-
             loss.backward()
-
             optimizer.step()
             running_loss+=loss.item()
             loop.set_postfix(loss=loss.item())
@@ -91,11 +70,8 @@ if __name__ == "__main__":
                 labels=labels.to(device)
                 outputs=model(features,cluster_map)
                 _,predicted=torch.max(outputs.data, 1)
-                # predicted=(outputs>0.5).float()
-                # predicted=predicted.view(-1)
-                # labels=labels.view(-1)
-                print("This is predicted: ",predicted)
-                print("This is original label: ",labels)
+                # print("This is predicted: ",predicted)
+                # print("This is original label: ",labels)
                 total+=labels.size(0)
                 correct+=(predicted==labels).sum().item()
             print(f"Validation Accuracy: {100*correct / total:.2f}%")
