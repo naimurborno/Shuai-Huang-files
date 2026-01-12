@@ -36,10 +36,10 @@ if __name__ == "__main__":
                                         )
     all_train_features=[]
     for batch in train_loader:
-        features=batch['features'].to()
-        features=features.view(-1, features.shape[-1])
+        features=batch['features'].to(device)
+        B, T, F=features.shape
+        features=features.view(B*T,F)
         all_train_features.append(features)
-    all_train_features=torch.cat(all_train_features,dim=0).numpy()
     pca_model.fit(all_train_features)
 
     
