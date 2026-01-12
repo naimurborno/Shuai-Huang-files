@@ -59,7 +59,7 @@ if __name__ == "__main__":
             # print("shape of labels:", labels.shape)
 
 
-            loss=loss_func(outputs,labels)
+            loss=loss_func(outputs,labels.float().view_as(outputs))
 
             loss.backward()
 
@@ -82,7 +82,7 @@ if __name__ == "__main__":
                 labels=labels.to(device)
                 outputs=model(features,cluster_map)
                 # _,predicted=torch.max(outputs.data, 1)
-                print("This is predicted: ",predicted)
+                print("This is predicted: ",outputs)
                 print("This is original label: ",labels)
                 total+=labels.size(0)
                 correct+=(outputs==labels).sum().item()

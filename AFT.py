@@ -119,7 +119,7 @@ class AtlasFreeBrainTransformer(nn.Module):
         embed_dim=360,
         num_heads=4,
         depth=2,
-        num_classes=2
+        num_classes=1
     ):
         super().__init__()
         self.roi_embed = ROIEmbedding(
@@ -135,9 +135,10 @@ class AtlasFreeBrainTransformer(nn.Module):
         )
 
         self.classifier = nn.Sequential(
-            nn.Linear(embed_dim, embed_dim),
+            nn.Linear(embed_dim, 128),
             nn.ReLU(),
-            nn.Linear(embed_dim, num_classes)
+            nn.Linear(128, num_classes).
+            nn.Sigmoid()
         )
 
     def forward(self, F_roi, C):
