@@ -80,12 +80,14 @@ class BlockPooling(nn.Module):
         print()
 
         Q = Q.permute(0, 4, 1, 2, 3)  # (B, D, X, Y, Z)
+        print("the shape of Q:", Q.shape)
 
         Q = F.avg_pool3d(
             Q,
             kernel_size=self.block_size,
             stride=self.stride
         )
+        print("The shape of Q after pooling:",Q.shape)
         Q=Q*self.block_size*self.block_size*self.block_size
 
         Q = Q.flatten(2).transpose(1, 2)  # (B, num_blocks, D)
