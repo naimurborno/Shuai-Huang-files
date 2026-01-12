@@ -43,6 +43,7 @@ if __name__ == "__main__":
         loop=tqdm(train_loader, desc=f"Epoch [{epoch+1}/{config['Epochs']}]")
         for batch in loop:
             features=batch['features'].to(device)
+            features=features.to(torch.float32)
             labels=batch['label']-1
             labels=labels.to(device)
             cluster_map=batch['cluster_map'].to(device)
@@ -73,6 +74,7 @@ if __name__ == "__main__":
             total=0
             for batch in val_loader:
                 features=batch['features'].to(device)
+                features=features.to(torch.float32)
                 if config['use_pca']==True:
                     features=apply_pca(features,pca_model=pca_model,train_data=False)
                 labels=batch['label']-1
