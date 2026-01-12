@@ -11,4 +11,5 @@ config['feature_data_dir']="/content/Dataset_shuai_zip/Features"
 config['cluster_data_dir']="/content/Dataset_shuai_zip/Cluster_index_mat/"
 config['batch_size']=8
 config['Epochs']=10
-config['n_components']=512
+config['n_components']=812
+config['apply_pca']=False
