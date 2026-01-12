@@ -44,13 +44,12 @@ if __name__ == "__main__":
         loop=tqdm(train_loader, desc=f"Epoch [{epoch+1}/{config['Epochs']}]")
         for batch in loop:
             features=batch['features'].to(device)
-            features=features.to(torch.float32)
+            # features=features.to(torch.float32)
             labels=batch['label']-1
             labels=labels.to(device)
             cluster_map=batch['cluster_map'].to(device)
             cluster_map=cluster_map.to(torch.long)
-            if config['use_pca']==True:
-                features=apply_pca(features,pca_model=pca_model,train_data=True) #Apply PCA to reduce dimensionality
+            features=apply_pca(features,pca_model=pca_model,train_data=True) #Apply PCA to reduce dimensionality
             # print("Data size after applying PCA:", features.shape)
             outputs=model(features, cluster_map) #Get prediction from the model
             # _, predicted=torch.max(outputs, dim=1)
@@ -75,15 +74,16 @@ if __name__ == "__main__":
             total=0
             for batch in val_loader:
                 features=batch['features'].to(device)
-                features=features.to(torch.float32)
-                if config['use_pca']==True:
-                    features=apply_pca(features,pca_model=pca_model,train_data=False)
+                # features=features.to(torch.float32)
+                features=apply_pca(features,pca_model=pca_model,train_data=False)
                 labels=batch['label']-1
                 cluster_map=batch['cluster_map'].to(device)
                 cluster_map=cluster_map.to(torch.long)
                 labels=labels.to(device)
                 outputs=model(features,cluster_map)
                 _,predicted=torch.max(outputs.data, 1)
+                print("This is predicted: ",predicted)
+                print("This is original label: ",labels)
                 total+=labels.size(0)
                 correct+=(predicted==labels).sum().item()
             print(f"Validation Accuracy: {100*correct / total:.2f}%")

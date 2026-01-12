@@ -114,7 +114,7 @@ class BrainTransformer(nn.Module):
 class AtlasFreeBrainTransformer(nn.Module):
     def __init__(
         self,
-        roi_feat_dim=1632,
+        roi_feat_dim=512,
         embed_dim=360,
         num_heads=4,
         depth=2,
