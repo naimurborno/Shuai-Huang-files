@@ -50,7 +50,7 @@ if __name__ == "__main__":
             cluster_map=cluster_map.to(torch.long)
             if config['use_pca']==True:
                 features=apply_pca(features,pca_model=pca_model,train_data=True) #Apply PCA to reduce dimensionality
-            print("Data size after applying PCA:", features.shape)
+            # print("Data size after applying PCA:", features.shape)
             outputs=model(features, cluster_map) #Get prediction from the model
             # _, predicted=torch.max(outputs, dim=1)
             # print("shape of output:", outputs.shape)
