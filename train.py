@@ -36,7 +36,7 @@ if __name__ == "__main__":
     print("Selected Device:", device)
 
     model=AtlasFreeBrainTransformer().to(device)
-    loss_func=nn.CrossEntropyLoss()
+    loss_func=nn.BCELoss()
     optimizer=optim.AdamW(model.parameters(),lr=1e-6)
     for epoch in range(config['Epochs']):
         model.train()
@@ -81,11 +81,11 @@ if __name__ == "__main__":
                 cluster_map=cluster_map.to(torch.long)
                 labels=labels.to(device)
                 outputs=model(features,cluster_map)
-                _,predicted=torch.max(outputs.data, 1)
+                # _,predicted=torch.max(outputs.data, 1)
                 print("This is predicted: ",predicted)
                 print("This is original label: ",labels)
                 total+=labels.size(0)
-                correct+=(predicted==labels).sum().item()
+                correct+=(outputs==labels).sum().item()
             print(f"Validation Accuracy: {100*correct / total:.2f}%")
         
 
