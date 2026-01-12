@@ -69,7 +69,7 @@ def construct_brain_map(C, F_roi):
 # --------------------------------------------------
 
 class BlockPooling(nn.Module):
-    def __init__(self, block_size=5, stride=5):
+    def __init__(self, block_size=3, stride=2):
         super().__init__()
         self.block_size = block_size
         self.stride = stride
@@ -94,7 +94,7 @@ class BlockPooling(nn.Module):
 # --------------------------------------------------
 
 class BrainTransformer(nn.Module):
-    def __init__(self, dim, num_heads=4, depth=4):
+    def __init__(self, dim, num_heads=4, depth=2):
         super().__init__()
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=dim,
@@ -115,9 +115,9 @@ class AtlasFreeBrainTransformer(nn.Module):
     def __init__(
         self,
         roi_feat_dim=1632,
-        embed_dim=300,
+        embed_dim=360,
         num_heads=4,
-        depth=4,
+        depth=2,
         num_classes=2
     ):
         super().__init__()
@@ -157,12 +157,12 @@ class AtlasFreeBrainTransformer(nn.Module):
         # 3. Block pooling
         Q=Q.permute(0,4,1,2,3)
         print("Shape After the permute function:",Q.shape)
-        tokens=self.pool(Q)
-        # tokens = self.block_pool(Q)  # (B, N, D)
+        # tokens=self.pool(Q)
+        tokens = self.block_pool(Q)  # (B, N, D)
         print("Shape after pooling function:",tokens.shape)
-        tokens=tokens.flatten(2)
-        print("shape after the flatten function:",tokens.shape)
-        tokens=tokens.transpose(1,2)
+        # tokens=tokens.flatten(2)
+        # print("shape after the flatten function:",tokens.shape)
+        # tokens=tokens.transpose(1,2)
         print("Shape After the transpose function and ready to be fet in transformer:",tokens.shape)
 
         # 4. Transformer
