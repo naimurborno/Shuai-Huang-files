@@ -43,14 +43,19 @@ class PositionalEncoding(nn.Module):
 # --------------------------------------------------
 def extract_nodes(Q, kernel_size=3, stride=2):
     batch_size, channels, d,h,w=Q.shape
+    # print("shape of Q is ",Q.shape)
     blocks=Q.unfold(2,kernel_size,stride).unfold(3, kernel_size,stride).unfold(4,kernel_size,stride)
     node_features=blocks.sum(dim=(-3,-2,-1))
     node_features= node_features.reshape(batch_size, channels, -1)
     node_features= node_features.permute(0,2,1)
+    # print("node_features shape:,",node_features.shape)
     with torch.no_grad():
-        mask=node_features.abs().sum(dim=-1) > 0
+        mask=node_features.abs().sum(dim=(0,2)) > 0
         valid_indices=torch.where(mask)
+    valid_indices=valid_indices[0]
+    # print("valid_indices,",valid_indices)
     final_nodes=node_features[:,valid_indices,:]
+    # print("final_node shape: ",final_nodes.shape)
     return final_nodes
 
 def construct_brain_map(C, F_roi):
