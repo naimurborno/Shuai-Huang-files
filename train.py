@@ -25,6 +25,8 @@ warnings.filterwarnings(
 if __name__ == "__main__":
     # Get the config file
     config = train_config.config
+    device=torch.device("cuda" if torch.cuda.is_available() else "cpu") #Check if cuda is available
+    print("Selected Device:", device)
     pca_model=PCA(n_components=config['n_components'])
     train_loader, val_loader, test_loader = create_dataloaders(
                                             label_data_dir=config['label_data_dir'],
@@ -32,8 +34,15 @@ if __name__ == "__main__":
                                             cluster_data_dir=config['cluster_data_dir'],
                                             batch_size=config['batch_size']
                                         )
-    device=torch.device("cuda" if torch.cuda.is_available() else "cpu") #Check if cuda is available
-    print("Selected Device:", device)
+    all_train_features=[]
+    for batch in train_loader:
+        features=batch['features'].to()
+        features=features.view(-1, features.shape[-1])
+        all_train_features.append(features)
+    all_train_features=torch.cat(all_train_features,dim=0).numpy()
+    pca_model.fit(all_train_features)
+
+    
 
     model=AtlasFreeBrainTransformer().to(device)
     loss_func=nn.BCELoss()
@@ -60,6 +69,7 @@ if __name__ == "__main__":
 
 
             loss=loss_func(outputs,labels.float().view_as(outputs))
+            optimizer.zero_grad()
 
             loss.backward()
 
