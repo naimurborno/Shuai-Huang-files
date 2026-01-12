@@ -155,13 +155,13 @@ class AtlasFreeBrainTransformer(nn.Module):
         print("shape After Constructing the brain map:",Q.shape)
 
         # 3. Block pooling
-        Q=Q.permute(0,4,1,2,3)
+        # Q=Q.permute(0,4,1,2,3)
         print("Shape After the permute function:",Q.shape)
         # tokens=self.pool(Q)
         tokens = self.block_pool(Q)  # (B, N, D)
         print("Shape after pooling function:",tokens.shape)
         # tokens=tokens.flatten(2)
-        # print("shape after the flatten function:",tokens.shape)
+        print("shape after the flatten function:",tokens.shape)
         # tokens=tokens.transpose(1,2)
         print("Shape After the transpose function and ready to be fet in transformer:",tokens.shape)
 
