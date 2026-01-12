@@ -125,7 +125,7 @@ class AtlasFreeBrainTransformer(nn.Module):
             in_dim=roi_feat_dim,
             out_dim=embed_dim
         )
-        self.pool=nn.AvgPool3d(kernel_size=3, stride=2)
+        self.pool=nn.AvgPool3d(kernel_size=3, stride=3)
         self.block_pool = BlockPooling()
         self.transformer = BrainTransformer(
             dim=embed_dim,
