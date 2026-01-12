@@ -181,7 +181,7 @@ class AtlasFreeBrainTransformer(nn.Module):
         # print("shape After Constructing the brain map:",Q.shape)
 
         # 3. Block pooling
-        # Q=Q.permute(0,4,1,2,3)
+        Q=Q.permute(0,4,1,2,3)
         # print("Shape After the permute function:",Q.shape)
         # tokens=self.pool(Q)
         tokens=extract_nodes(Q, kernel_size=3, stride=2)
