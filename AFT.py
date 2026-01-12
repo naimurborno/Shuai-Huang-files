@@ -115,18 +115,18 @@ class BrainTransformer(nn.Module):
 class AtlasFreeBrainTransformer(nn.Module):
     def __init__(
         self,
-        roi_feat_dim=512,
+        roi_feat_dim=1632,
         embed_dim=360,
         num_heads=4,
         depth=2,
-        num_classes=1
+        num_classes=2
     ):
         super().__init__()
         self.roi_embed = ROIEmbedding(
             in_dim=roi_feat_dim,
             out_dim=embed_dim
         )
-        self.pool=nn.AvgPool3d(kernel_size=3, stride=3)
+        self.pool=nn.AvgPool3d(kernel_size=3, stride=2)
         self.block_pool = BlockPooling()
         self.transformer = BrainTransformer(
             dim=embed_dim,
@@ -137,8 +137,7 @@ class AtlasFreeBrainTransformer(nn.Module):
         self.classifier = nn.Sequential(
             nn.Linear(embed_dim, 128),
             nn.ReLU(),
-            nn.Linear(128, num_classes),
-            nn.Sigmoid()
+            nn.Linear(128, num_classes)
         )
 
     def forward(self, F_roi, C):
@@ -158,10 +157,10 @@ class AtlasFreeBrainTransformer(nn.Module):
 
         # 3. Block pooling
         # Q=Q.permute(0,4,1,2,3)
-        # print("Shape After the permute function:",Q.shape)
+        print("Shape After the permute function:",Q.shape)
         # tokens=self.pool(Q)
         tokens = self.block_pool(Q)  # (B, N, D)
-        # print("Shape after pooling function:",tokens.shape)
+        print("Shape after pooling function:",tokens.shape)
         # tokens=tokens.flatten(2)
         # print("shape after the flatten function:",tokens.shape)
         # tokens=tokens.transpose(1,2)

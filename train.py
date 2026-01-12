@@ -2,7 +2,7 @@ import argparse
 import numpy as np
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, get_linear_schedule_with_warmup
-from torch.optim import AdamW
+from torch.optim import AdamW, Adam
 from sklearn.metrics import accuracy_score, classification_report
 from torch import nn
 from collections import defaultdict
@@ -34,31 +34,30 @@ if __name__ == "__main__":
                                             cluster_data_dir=config['cluster_data_dir'],
                                             batch_size=config['batch_size']
                                         )
-    all_train_features=[]
-    for batch in train_loader:
-        features=batch['features'].to(device)
-        B, T, F=features.shape
-        features=features.view(B*T,F)
-        all_train_features.append(features)
-    pca_model.fit(all_train_features)
-
-    
-
+    # all_train_features=[]
+    # for batch in train_loader:
+    #     features=batch['features'].to(device)
+    #     all_train_features.append(features)
+    # all_train_features=torch.cat(all_train_features,dim=0)
+    # B,T,F=all_train_features.shape
+    # all_train_features=all_train_features.view(B*T,F)
+    # print(all_train_features.shape)
+    # pca_model.fit(all_train_features)
     model=AtlasFreeBrainTransformer().to(device)
     loss_func=nn.BCELoss()
-    optimizer=optim.AdamW(model.parameters(),lr=1e-6)
+    optimizer=optim.Adam(model.parameters(),lr=1e-6)
     for epoch in range(config['Epochs']):
         model.train()
         running_loss=0.0
         loop=tqdm(train_loader, desc=f"Epoch [{epoch+1}/{config['Epochs']}]")
         for batch in loop:
             features=batch['features'].to(device)
-            # features=features.to(torch.float32)
+            features=features.to(torch.float32)
             labels=batch['label']-1
             labels=labels.to(device)
             cluster_map=batch['cluster_map'].to(device)
             cluster_map=cluster_map.to(torch.long)
-            features=apply_pca(features,pca_model=pca_model,train_data=True) #Apply PCA to reduce dimensionality
+            # features=apply_pca(features,pca_model=pca_model,train_data=True) #Apply PCA to reduce dimensionality
             # print("Data size after applying PCA:", features.shape)
             outputs=model(features, cluster_map) #Get prediction from the model
             # _, predicted=torch.max(outputs, dim=1)
@@ -68,7 +67,7 @@ if __name__ == "__main__":
             # print("shape of labels:", labels.shape)
 
 
-            loss=loss_func(outputs,labels.float().view_as(outputs))
+            loss=loss_func(outputs,labels)
             optimizer.zero_grad()
 
             loss.backward()
@@ -84,21 +83,21 @@ if __name__ == "__main__":
             total=0
             for batch in val_loader:
                 features=batch['features'].to(device)
-                # features=features.to(torch.float32)
-                features=apply_pca(features,pca_model=pca_model,train_data=False)
+                features=features.to(torch.float32)
+                # features=apply_pca(features,pca_model=pca_model,train_data=False)
                 labels=batch['label']-1
                 cluster_map=batch['cluster_map'].to(device)
                 cluster_map=cluster_map.to(torch.long)
                 labels=labels.to(device)
                 outputs=model(features,cluster_map)
-                # _,predicted=torch.max(outputs.data, 1)
-                predicted=(outputs>0.5).float()
-                predicted=predicted.view(-1)
-                labels=labels.view(-1)
+                _,predicted=torch.max(outputs.data, 1)
+                # predicted=(outputs>0.5).float()
+                # predicted=predicted.view(-1)
+                # labels=labels.view(-1)
                 print("This is predicted: ",predicted)
                 print("This is original label: ",labels)
                 total+=labels.size(0)
-                correct+=(outputs==labels).sum().item()
+                correct+=(predicted==labels).sum().item()
             print(f"Validation Accuracy: {100*correct / total:.2f}%")
         
 
