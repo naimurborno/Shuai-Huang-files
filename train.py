@@ -44,7 +44,7 @@ if __name__ == "__main__":
     # print(all_train_features.shape)
     # pca_model.fit(all_train_features)
     model=AtlasFreeBrainTransformer().to(device)
-    loss_func=nn.BCELoss()
+    loss_func=nn.CrossEntropyLoss()
     optimizer=optim.Adam(model.parameters(),lr=1e-6)
     for epoch in range(config['Epochs']):
         model.train()
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         for batch in loop:
             features=batch['features'].to(device)
             features=features.to(torch.float32)
-            labels=batch['label']-1
+            labels=(batch['label']-1).long().to(device)
             labels=labels.to(device)
             cluster_map=batch['cluster_map'].to(device)
             cluster_map=cluster_map.to(torch.long)
