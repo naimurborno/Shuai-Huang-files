@@ -47,9 +47,8 @@ if __name__ == "__main__":
             labels=labels.to(device)
             cluster_map=batch['cluster_map'].to(device)
             cluster_map=cluster_map.to(torch.long)
-
             features=apply_pca(features,pca_model=pca_model,train_data=True) #Apply PCA to reduce dimensionality
-
+            print("Data size after applying PCA:", features.shape)
             outputs=model(features, cluster_map) #Get prediction from the model
             # _, predicted=torch.max(outputs, dim=1)
             # print("shape of output:", outputs.shape)
@@ -74,6 +73,7 @@ if __name__ == "__main__":
             for batch in val_loader:
                 features=batch['features'].to(device)
                 features=apply_pca(features,pca_model=pca_model,train_data=False)
+            
                 labels=batch['label']-1
                 cluster_map=batch['cluster_map'].to(device)
                 cluster_map=cluster_map.to(torch.long)
