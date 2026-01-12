@@ -18,7 +18,7 @@ import train_config
 #     return pca
 config = train_config.config
 class ROIEmbedding(nn.Module):
-    def __init__(self, in_dim=1632, hidden_dim=512, out_dim=128):
+    def __init__(self, in_dim=512, hidden_dim=400, out_dim=360):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(in_dim, hidden_dim),
