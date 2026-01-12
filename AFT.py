@@ -69,7 +69,7 @@ def construct_brain_map(C, F_roi):
 # --------------------------------------------------
 
 class BlockPooling(nn.Module):
-    def __init__(self, block_size=3, stride=3):
+    def __init__(self, block_size=3, stride=2):
         super().__init__()
         self.block_size = block_size
         self.stride = stride
