@@ -33,7 +33,7 @@ def extract_nodes(Q, kernel_size=3, stride=2):
         valid_indices=torch.where(mask)
     valid_indices=valid_indices[0]
     final_nodes=node_features[:,valid_indices,:]
-    print("final_shape before transformer",final_nodes.shape)
+    # print("final_shape before transformer",final_nodes.shape)
     return final_nodes
 
 def construct_brain_map(C, F_roi):

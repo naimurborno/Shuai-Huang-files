@@ -42,12 +42,12 @@ if __name__ == "__main__":
     all_train_features=torch.cat(all_train_features,dim=0)
     B,T,F=all_train_features.shape
     all_train_features=all_train_features.view(B*T,F)
-    print(all_train_features.shape)
+    # print(all_train_features.shape)
     all_train_features=all_train_features.to(torch.float32)
     pca_model.fit(all_train_features)
     model=AtlasFreeBrainTransformer().to(device)
     loss_func=nn.CrossEntropyLoss()
-    optimizer=optim.Adam(model.parameters(),lr=1e-6)
+    optimizer=optim.Adam(model.parameters(),lr=1e-4)
     for epoch in range(config['Epochs']):
         model.train()
         running_loss=0.0
