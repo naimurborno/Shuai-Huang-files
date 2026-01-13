@@ -26,6 +26,8 @@ if __name__ == "__main__":
     # Get the config file
     config = train_config.config
     device=torch.device("cuda" if torch.cuda.is_available() else "cpu") #Check if cuda is available
+    pca_model=PCA(n_components=config['n_components'])
+    print("PCA Model Loaded!")
     print("Selected Device:", device)
     train_loader, val_loader, test_loader = create_dataloaders(
                                             label_data_dir=config['label_data_dir'],
@@ -33,6 +35,15 @@ if __name__ == "__main__":
                                             cluster_data_dir=config['cluster_data_dir'],
                                             batch_size=config['batch_size']
                                         )
+    all_train_features=[]
+    for batch in train_loader:
+        features=batch['features'].to(device)
+        all_train_features.append(features)
+    all_train_features=torch.cat(all_train_features,dim=0)
+    B,T,F=all_train_features.shape
+    all_train_features=all_train_features.view(B*T,F)
+    print(all_train_features.shape)
+    pca_model.fit(all_train_features)
     model=AtlasFreeBrainTransformer().to(device)
     loss_func=nn.CrossEntropyLoss()
     optimizer=optim.Adam(model.parameters(),lr=1e-6)

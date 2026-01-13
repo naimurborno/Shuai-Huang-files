@@ -3,22 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch_pca import PCA
 import train_config
-
-# --------------------------------------------------
-# 1. ROI Embedding Network (FNN)
-# --------------------------------------------------
-# def fit_pca(train_loader, n_coponents=256):
-#     roi_features=[]
-#     for batch in train_loader:
-#         F=batch['features'].numpy()
-#         roi_features.append(F.reshape(-1, F.shape[-1]))
-#     roi_features=np.concatenate(roi_features,axis=0)
-#     pca=PCA(n_components=n_components, whiten=True)
-#     pca.fit(roi_features)
-#     return pca
 config = train_config.config
 class ROIEmbedding(nn.Module):
-    def __init__(self, in_dim=512, hidden_dim=410, out_dim=360):
+    def __init__(self, in_dim=512, hidden_dim=256, out_dim=128):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(in_dim, hidden_dim),
@@ -35,27 +22,18 @@ class PositionalEncoding(nn.Module):
         self.pos_embed=nn.Parameter(
             torch.randn(1,max_tokens,dim)
         )
-
-
-
-# --------------------------------------------------
-# 2. ROI → Voxel Projection (Q construction)
-# --------------------------------------------------
 def extract_nodes(Q, kernel_size=3, stride=2):
     batch_size, channels, d,h,w=Q.shape
-    # print("shape of Q is ",Q.shape)
     blocks=Q.unfold(2,kernel_size,stride).unfold(3, kernel_size,stride).unfold(4,kernel_size,stride)
     node_features=blocks.sum(dim=(-3,-2,-1))
     node_features= node_features.reshape(batch_size, channels, -1)
     node_features= node_features.permute(0,2,1)
-    # print("node_features shape:,",node_features.shape)
     with torch.no_grad():
         mask=node_features.abs().sum(dim=(0,2)) > 0
         valid_indices=torch.where(mask)
     valid_indices=valid_indices[0]
-    # print("valid_indices,",valid_indices)
     final_nodes=node_features[:,valid_indices,:]
-    # print("final_node shape: ",final_nodes.shape)
+    print("final_shape before transformer",final_nodes.shape)
     return final_nodes
 
 def construct_brain_map(C, F_roi):
@@ -140,8 +118,8 @@ class BrainTransformer(nn.Module):
 class AtlasFreeBrainTransformer(nn.Module):
     def __init__(
         self,
-        roi_feat_dim=1632,
-        embed_dim=360,
+        roi_feat_dim=512,
+        embed_dim=128,
         num_heads=4,
         depth=2,
         num_classes=2
@@ -160,9 +138,9 @@ class AtlasFreeBrainTransformer(nn.Module):
         )
 
         self.classifier = nn.Sequential(
-            nn.Linear(embed_dim, 128),
+            nn.Linear(embed_dim, 64),
             nn.ReLU(),
-            nn.Linear(128, num_classes)
+            nn.Linear(64, num_classes)
         )
 
     def forward(self, F_roi, C):
@@ -184,7 +162,7 @@ class AtlasFreeBrainTransformer(nn.Module):
         Q=Q.permute(0,4,1,2,3)
         # print("Shape After the permute function:",Q.shape)
         # tokens=self.pool(Q)
-        tokens=extract_nodes(Q, kernel_size=3, stride=2)
+        tokens=extract_nodes(Q, kernel_size=5, stride=5)
         # tokens = self.block_pool(Q)  # (B, N, D)
         # print("Shape after pooling function:",tokens.shape)
         # tokens=tokens.flatten(2)
