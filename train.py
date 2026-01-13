@@ -43,6 +43,7 @@ if __name__ == "__main__":
     B,T,F=all_train_features.shape
     all_train_features=all_train_features.view(B*T,F)
     print(all_train_features.shape)
+    all_train_features=all_train_features.to(torch.float32)
     pca_model.fit(all_train_features)
     model=AtlasFreeBrainTransformer().to(device)
     loss_func=nn.CrossEntropyLoss()
