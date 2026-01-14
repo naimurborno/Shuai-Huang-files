@@ -18,3 +18,4 @@ config['learning_rate']=2e-4
 config['weight_decay']=0.05
 config['kernel_size']=5
 config['stride']=5
+config['n_split']=5

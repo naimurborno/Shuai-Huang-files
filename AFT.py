@@ -167,20 +167,12 @@ class AtlasFreeBrainTransformer(nn.Module):
         # print("Shape After the permute function:",Q.shape)
         # tokens=self.pool(Q)
         tokens=extract_nodes(Q, kernel_size=config['kernel_size'], stride=config['stride'])
-        # tokens = self.block_pool(Q)  # (B, N, D)
-        # print("Shape after pooling function:",tokens.shape)
-        # tokens=tokens.flatten(2)
-        # print("shape after the flatten function:",tokens.shape)
-        # tokens=tokens.transpose(1,2)
-        # print("Shape After the transpose function and ready to be fet in transformer:",tokens.shape)
 
         # 4. Transformer
         tokens = self.transformer(tokens)  # (B, N, D)
-        # print("Shape after transpose and after transformer section:",tokens.shape)
 
         # 5. Subject-level pooling
         h = tokens.mean(dim=1)  # (B, D)
-        # print("shape after subject level pooling:", h.shape)
 
         # 6. Classification
         out = self.classifier(h)

@@ -46,10 +46,7 @@ def main():
             file=loadmat(os.path.join(source,filename))
             save_path = os.path.join(features_dir, filename.split('.')[0])
             np.save(save_path, file)
-            # np.save(file, os.path.join(features_dir,filename.split('.')[0]))
-            # # shutil.move(file_path, dest_path)
-            # print(f"Moved → Features: {filename}")
-            moved_count += 1
+
             
         # # Move cluster index files
         elif filename.startswith('s_') and '_cluster_index.mat' in filename:
@@ -57,9 +54,6 @@ def main():
             file=loadmat(os.path.join(source, filename))
             save_path=os.path.join(cluster_dir, filename.split('.')[0])
             np.save(save_path,file)
-            # shutil.move(file_path, dest_path)
-            # print(f"Moved → Cluster_index_mat: {filename}")
-            moved_count += 1
     
     print(f"\nDone! {moved_count} files were organized.")
     print(f"Features folder: {features_dir}")

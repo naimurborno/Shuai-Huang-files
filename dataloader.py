@@ -14,9 +14,12 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 import scipy.io as sio
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold
 from typing import Optional, Dict, Any
+import train_config
 # import train_config
+
+config = train_config.config
 
 
 class BrainROIDataset(Dataset):
@@ -133,43 +136,29 @@ def create_dataloaders(
     Returns:
         (train_loader, val_loader, test_loader)
     """
+    labels_mat = sio.loadmat(label_data_dir)
+    labels = labels_mat['label'].flatten().astype(np.int64)
     # exclude={4, 6, 173, 175, 211, 232, 293, 319, 344, 378, 381, 391, 427, 461}
-    all_subjects =[i for i in range(1, 501) if i not in exclude_list]  # 1 to 500
+    all_subjects =[i for i in range(1, labels[0]+1) if i not in exclude_list]  # 1 to 500
 
     # Stratified split (though binary labels, still good practice)
-    train_subjs, temp_subjs = train_test_split(
+    trainval_subjs, test_subjs = train_test_split(
         all_subjects,
-        test_size=(val_size + test_size),
-
-        
+        test_size=test_size,
         random_state=random_state
     )
 
-    val_subjs, test_subjs = train_test_split(
-        temp_subjs,
-        test_size=test_size / (val_size + test_size),
-        random_state=random_state
-    )
 
-    print(f"Dataset split → Train: {len(train_subjs)} | Val: {len(val_subjs)} | Test: {len(test_subjs)}")
-    train_ds = BrainROIDataset(train_subjs, label_data_dir, feature_data_dir, cluster_data_dir, load_cluster=load_cluster)
-    val_ds   = BrainROIDataset(val_subjs,   label_data_dir, feature_data_dir, cluster_data_dir, load_cluster=load_cluster)
-    test_ds  = BrainROIDataset(test_subjs,  label_data_dir, feature_data_dir, cluster_data_dir, load_cluster=load_cluster)
+    # val_subjs, test_subjs = train_test_split(
+    #     temp_subjs,
+    #     test_size=test_size / (val_size + test_size),
+    #     random_state=random_state
+    # )
 
-    train_loader = DataLoader(
-        train_ds,
-        batch_size=batch_size,
-        shuffle=True,
-        num_workers=num_workers,
-        drop_last=True
-    )
-
-    val_loader = DataLoader(
-        val_ds,
-        batch_size=batch_size,
-        shuffle=False,
-        num_workers=num_workers,
-    )
+    # print(f"Dataset split → Train: {len(train_subjs)} | Val: {len(val_subjs)} | Test: {len(test_subjs)}")
+    # train_ds = BrainROIDataset(train_subjs, label_data_dir, feature_data_dir, cluster_data_dir, load_cluster=load_cluster)
+    # val_ds   = BrainROIDataset(val_subjs,   label_data_dir, feature_data_dir, cluster_data_dir, load_cluster=load_cluster)
+    test_ds  = BrainROIDataset(test_subjs,  label_data_dir, feature_data_dir, cluster_data_dir, load_cluster=load_cluster)   
 
     test_loader = DataLoader(
         test_ds,
@@ -177,6 +166,29 @@ def create_dataloaders(
         shuffle=False,
         num_workers=num_workers,
     )
+    skf=StratifiedKFold(n_splits=config['n_split'],shuffle=True, random_state=random_state)
+    folds=[]
+    trainval_labels=labels[trainval_subjs-1]
+    for fold_id, (tr_idx,val_idx) in enumerate(skf.split(trainval_subjs,trainval_labels)):
+        train_ids=trainval_subjs[tr_idx]
+        val_ids=trainval_subjs[val_idx]
+        train_ds=BrainROIDataset(train_ids,label_data_dir,feature_data_dir, cluster_data_dir,load_cluster=load_cluster)
+        val_ds=BrainROIDataset(val_ids,label_data_dir,feature_data_dir, cluster_data_dir, load_cluster=load_cluster)
+        train_loader = DataLoader(
+        train_ds,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=num_workers,
+        drop_last=True
+        )
 
-    return train_loader, val_loader, test_loader
+        val_loader = DataLoader(
+        val_ds,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        )
+        folds.append((train_loader,val_loader))
+
+    return folds, test_loader
 
