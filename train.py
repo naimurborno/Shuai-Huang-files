@@ -90,7 +90,7 @@ if __name__ == "__main__":
                 correct+=(predicted==labels).sum().item()
             print(f"Validation Accuracy: {100*correct / total:.2f}%")
             Accuracy+=100*correct/total
-    print(f"Final Accuracy: {Accuracy}%")
+    print(f"Final Accuracy: {Accuracy/config['Epochs']}%")
 
         
 
