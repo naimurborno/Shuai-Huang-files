@@ -12,7 +12,9 @@ from datetime import datetime
 from AFT import AtlasFreeBrainTransformer
 from torch_pca import PCA
 from APPLY_PCA import apply_pca
+from plot import plot_training_curves
 import os 
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 # from data_loader import Dataset, DataLoader
 import train_config
 from dataloader import create_dataloaders
@@ -45,9 +47,18 @@ if __name__ == "__main__":
     # print(all_train_features.shape)
     all_train_features=all_train_features.to(torch.float32)
     pca_model.fit(all_train_features)
+
+    train_losses=[]
+    train_accs=[]
+    val_losses=[]
+    val_accs=[]
+    epochs_list=[]
+
     model=AtlasFreeBrainTransformer().to(device)
     loss_func=nn.CrossEntropyLoss()
-    optimizer=optim.Adam(model.parameters(),lr=config['learning_rate'],weight_decay=config['weight_decay'])
+    optimizer=optim.Adam(model.parameters(),lr=config['learning_rate'],weight_decay=config['weight_decay'],betas=(0.9,0.98))
+    scheduler=ReduceLROnPlateau(optimizer, model='max',factor=0.1, patience=6, verbose=True, min_lr=1.8e-4)
+
     Accuracy=0.0
     for epoch in range(config['Epochs']):
         model.train()
@@ -70,11 +81,14 @@ if __name__ == "__main__":
             correct+=(predicted==labels).sum().item()
             optimizer.zero_grad()
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(),max_norm=1.0)
             optimizer.step()
             running_loss+=loss.item()
             loop.set_postfix(loss=loss.item())
         print(f"Epoch {epoch+1} Complete. Average Loss: {running_loss/len(train_loader):.4f}")
         print(f"Training Accuracy: {100*correct / total:.2f}%")
+        train_losses.append(running_loss/len(train_loader))
+        train_accs.append(100*correct/total)
 
         model.eval()
         with torch.no_grad():
@@ -96,6 +110,7 @@ if __name__ == "__main__":
                 correct+=(predicted==labels).sum().item()
             print(f"Validation Accuracy: {100*correct / total:.2f}%")
             Accuracy+=100*correct/total
+            val_accs.append(100*correct/total)
     print(f"Final Accuracy: {Accuracy/config['Epochs']}%")
     model.eval()
     with torch.no_grad():
@@ -114,6 +129,12 @@ if __name__ == "__main__":
             total+=labels.size(0)
             correct+=(predicted==labels).sum().item()
         print(f"Test Accuracy: {100*correct/ total:.2f}%")
+    plot_training_curves(
+        config['Epochs'], 
+        train_losses, train_accs, 
+        val_losses, val_accs,
+        save_path=os.path.join(config['output_dir'], 'training_curves.png')
+    )
 
 
         
