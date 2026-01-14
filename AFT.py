@@ -9,7 +9,7 @@ class ROIEmbedding(nn.Module):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(in_dim, hidden_dim),
-            nn.ReLU(),
+            nn.GeLU(),
             nn.Dropout(0.5),
             nn.Linear(hidden_dim, out_dim)
         )
@@ -142,7 +142,7 @@ class AtlasFreeBrainTransformer(nn.Module):
 
         self.classifier = nn.Sequential(
             nn.Linear(embed_dim, 64),
-            nn.ReLU(),
+            nn.GeLU(),
             nn.Dropout(0.5),
             nn.Linear(64, num_classes)
         )
