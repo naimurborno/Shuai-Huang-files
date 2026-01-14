@@ -134,7 +134,7 @@ def create_dataloaders(
         (train_loader, val_loader, test_loader)
     """
     # exclude={4, 6, 173, 175, 211, 232, 293, 319, 344, 378, 381, 391, 427, 461}
-    all_subjects =range(1,501) #[i for i in range(1, 501) if i not in exclude]  # 1 to 500
+    all_subjects =[i for i in range(1, 501) if i not in exclude_list]  # 1 to 500
 
     # Stratified split (though binary labels, still good practice)
     train_subjs, temp_subjs = train_test_split(
