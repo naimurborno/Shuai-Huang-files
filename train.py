@@ -56,8 +56,8 @@ if __name__ == "__main__":
 
     model=AtlasFreeBrainTransformer().to(device)
     loss_func=nn.CrossEntropyLoss()
-    optimizer=optim.Adam(model.parameters(),lr=config['learning_rate'],weight_decay=config['weight_decay'],betas=(0.9,0.98))
-    scheduler=ReduceLROnPlateau(optimizer, model='max',factor=0.1, patience=6, verbose=True, min_lr=1.8e-4)
+    optimizer=optim.Adam(model.parameters(),lr=config['learning_rate'],weight_decay=config['weight_decay'])
+    # scheduler=ReduceLROnPlateau(optimizer, mode='max',factor=0.01, patience=6, min_lr=2e-4)
 
     Accuracy=0.0
     for epoch in range(config['Epochs']):
@@ -89,6 +89,7 @@ if __name__ == "__main__":
         print(f"Training Accuracy: {100*correct / total:.2f}%")
         train_losses.append(running_loss/len(train_loader))
         train_accs.append(100*correct/total)
+        epochs_list.append(epoch)
 
         model.eval()
         with torch.no_grad():
@@ -129,12 +130,13 @@ if __name__ == "__main__":
             total+=labels.size(0)
             correct+=(predicted==labels).sum().item()
         print(f"Test Accuracy: {100*correct/ total:.2f}%")
+    print(train_losses, train_accs)
     plot_training_curves(
-        config['Epochs'], 
+        epochs_list, 
         train_losses, train_accs, 
         val_losses, val_accs,
-        save_path=os.path.join(config['output_dir'], 'training_curves.png')
-    )
+        save_path=config['output_dir'])
+    
 
 
         

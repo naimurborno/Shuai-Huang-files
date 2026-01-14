@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
+import os
 def plot_training_curves(epochs, train_loss, train_acc, val_loss, val_acc, save_path="training_curves.png"):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
-    
+    os.makedirs(save_path,exist_ok=True)
     # Loss plot
     # ax1.plot(epochs, train_loss, 'b-', label='Train Loss')
     # ax1.plot(epochs, val_loss, 'r-', label='Validation Loss')
@@ -12,6 +13,12 @@ def plot_training_curves(epochs, train_loss, train_acc, val_loss, val_acc, save_
     # ax1.grid(True, alpha=0.3)
     
     # Accuracy plot
+    # print(epochs)
+    # print(train_acc.shape)
+    # print(val_acc.shape)
+    print(epochs)
+    print(train_acc)
+    print(val_acc)
     ax2.plot(epochs, train_acc, 'b-', label='Train Accuracy')
     ax2.plot(epochs, val_acc, 'r-', label='Validation Accuracy')
     ax2.set_title('Accuracy over Epochs')
@@ -22,6 +29,6 @@ def plot_training_curves(epochs, train_loss, train_acc, val_loss, val_acc, save_
     ax2.grid(True, alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(save_path,"training figure.jpg"), dpi=300, bbox_inches='tight')
     plt.close(fig)  # close figure to free memory
     print(f"Training curves saved to: {save_path}")
