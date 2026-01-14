@@ -91,6 +91,24 @@ if __name__ == "__main__":
             print(f"Validation Accuracy: {100*correct / total:.2f}%")
             Accuracy+=100*correct/total
     print(f"Final Accuracy: {Accuracy/config['Epochs']}%")
+    model.eval()
+    with torch.no_grad():
+        correct=0
+        total=0
+        for batch in test_loader:
+            features=batch['features'].to(device)
+            features=features.to(torch.float32)
+            features=apply_pca(features, pca_model, train_data=False)
+            labels=batch['label']-1
+            cluster_map=batch['cluster_map'].to(device)
+            cluster_map=cluster_map.to(torch.long)
+            labels=labels.to(device)
+            outputs=model(features, cluster_map)
+            _,predicted=torch.max(outputs.data,1)
+            total+=labels.size(0)
+            correct+=(predicted==labels).sum().item()
+            print(f"Test Accuracy: {100*correct/ total:.2f}%")
+
 
         
 
