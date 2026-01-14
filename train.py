@@ -34,8 +34,9 @@ if __name__ == "__main__":
         data=np.load(os.path.join(config['feature_data_dir'],i),allow_pickle=True)
         data=data.item()['feature_mat']
         if data.shape[0]!=400:
-            exclude_list.append(i)
+            exclude_list.append(i.split('_')[1])
         print(i)
+    print(exclude_list)
     train_loader, val_loader, test_loader = create_dataloaders(
                                             label_data_dir=config['label_data_dir'],
                                             feature_data_dir=config['feature_data_dir'],
