@@ -29,6 +29,7 @@ if __name__ == "__main__":
     # Get the config file
     config = train_config.config
     device=torch.device("cuda" if torch.cuda.is_available() else "cpu") 
+
     
     print("PCA Model Loaded!")
     print("Selected Device:", device)
@@ -51,10 +52,12 @@ if __name__ == "__main__":
                                         )
     indices=np.arange(dataset_len)
     k_fold=KFold(n_splits=config['n_split'],shuffle=True,random_state=42)
+    
     metrics_records=[]
     for fold,(train_loader,val_loader) in enumerate(folds):
         print(f"Training for fold: {fold+1}")
         print(".............................")
+        early_stoper=EarlyStopping(patience=10)
         pca_model=PCA(n_components=config['n_components'])
         all_train_features=[]
         for batch in train_loader:
@@ -77,6 +80,7 @@ if __name__ == "__main__":
         loss_func=nn.CrossEntropyLoss()
         optimizer=optim.Adam(model.parameters(),lr=config['learning_rate'],weight_decay=config['weight_decay'])
         # scheduler=ReduceLROnPlateau(optimizer, mode='max',factor=0.01, patience=6, min_lr=2e-4)
+        best_val_acc=0.0
 
         Accuracy=0.0
         for epoch in range(config['Epochs']):
@@ -139,15 +143,22 @@ if __name__ == "__main__":
                 print(f"Validation Accuracy: {100*correct / total:.2f}%")
                 Accuracy+=100*correct/total
                 val_accs=100*correct/total
+                improved=early_stoper.step(val_accs)
+                if improved:
+                    best_val_acc=val_accs
+                    torch.save(model.state_dict(),f"best_fold_{fold}.pt")
+                if early_stoper.stop:
+                    print("Early_stoppint.")
+                    break
                 val_losses=running_loss/len(val_loader)
-                metrics_records.append(
-                        "fold":fold+1,
-                        "epoch":epoch+1,
-                        "train_loss":train_loss,
-                        "train_acc":train_accs,
-                        "val_loss":val_losses,
-                        "val_acc":val_accs
-                    )
+                metrics_records.append({
+                        "fold": fold+1,
+                        "epoch": epoch+1,
+                        "train_loss": train_loss,
+                        "train_acc": train_accs,
+                        "val_loss": val_losses,
+                        "val_acc": val_accs
+                    })
         print(f"Final Accuracy: {Accuracy/config['Epochs']}%")
         
         print(f"Finish Training for Fold: {fold+1}")
@@ -167,6 +178,8 @@ if __name__ == "__main__":
         total=0
         for batch in test_loader:
             features=batch['features'].to(device)
+            features=features.to(torch.float32)
+            features=apply_pca(features,pca_model=pca_model,train_data=False)
             labels=batch['label']-1
             cluster_map=batch['cluster_map'].to(device)
             cluster_map=cluster_map.to(torch.long)
@@ -178,7 +191,7 @@ if __name__ == "__main__":
         print(f"Test Accuracy: {100*correct/ total:.2f}%")
     print(train_losses, train_accs)
     
-    plot_training_curves(metrics_df)
+    plot_training_curves(metrics_df,save_dir=config['output_dir'])
     
 
 

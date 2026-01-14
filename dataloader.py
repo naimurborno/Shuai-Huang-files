@@ -139,7 +139,7 @@ def create_dataloaders(
     labels_mat = sio.loadmat(label_data_dir)
     labels = labels_mat['label'].flatten().astype(np.int64)
     # exclude={4, 6, 173, 175, 211, 232, 293, 319, 344, 378, 381, 391, 427, 461}
-    all_subjects =[i for i in range(1, labels[0]+1) if i not in exclude_list]  # 1 to 500
+    all_subjects =[i for i in range(1, len(labels)+1) if i not in exclude_list]  # 1 to 500
 
     # Stratified split (though binary labels, still good practice)
     trainval_subjs, test_subjs = train_test_split(
@@ -147,6 +147,7 @@ def create_dataloaders(
         test_size=test_size,
         random_state=random_state
     )
+    trainval_subjs=np.array(trainval_subjs)
 
 
     # val_subjs, test_subjs = train_test_split(

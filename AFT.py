@@ -9,7 +9,7 @@ class ROIEmbedding(nn.Module):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(in_dim, hidden_dim),
-            nn.GeLU(),
+            nn.GELU(),
             nn.Dropout(0.5),
             nn.Linear(hidden_dim, out_dim)
         )
