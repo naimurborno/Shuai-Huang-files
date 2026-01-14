@@ -107,7 +107,7 @@ if __name__ == "__main__":
             _,predicted=torch.max(outputs.data,1)
             total+=labels.size(0)
             correct+=(predicted==labels).sum().item()
-            print(f"Test Accuracy: {100*correct/ total:.2f}%")
+        print(f"Test Accuracy: {100*correct/ total:.2f}%")
 
 
         
