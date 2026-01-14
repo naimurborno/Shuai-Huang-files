@@ -13,3 +13,5 @@ config['batch_size']=16
 config['Epochs']=50
 config['n_components']=512
 config['use_pca']=False
+config['learning_rate']=2e-4
+config['weight_decay']=0.05

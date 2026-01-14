@@ -162,7 +162,7 @@ class AtlasFreeBrainTransformer(nn.Module):
         Q=Q.permute(0,4,1,2,3)
         # print("Shape After the permute function:",Q.shape)
         # tokens=self.pool(Q)
-        tokens=extract_nodes(Q, kernel_size=5, stride=5)
+        tokens=extract_nodes(Q, kernel_size=3, stride=2)
         # tokens = self.block_pool(Q)  # (B, N, D)
         # print("Shape after pooling function:",tokens.shape)
         # tokens=tokens.flatten(2)
