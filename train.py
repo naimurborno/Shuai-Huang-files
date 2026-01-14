@@ -95,6 +95,7 @@ if __name__ == "__main__":
         with torch.no_grad():
             correct=0
             total=0
+            running_loss=0.0
             for batch in val_loader:
                 features=batch['features'].to(device)
                 features=features.to(torch.float32)
@@ -104,14 +105,17 @@ if __name__ == "__main__":
                 cluster_map=cluster_map.to(torch.long)
                 labels=labels.to(device)
                 outputs=model(features,cluster_map)
+                loss=loss_func(outputs,labels)
                 _,predicted=torch.max(outputs.data, 1)
                 # print("This is predicted: ",predicted)
                 # print("This is original label: ",labels)
+                running_loss+=loss.item()
                 total+=labels.size(0)
                 correct+=(predicted==labels).sum().item()
             print(f"Validation Accuracy: {100*correct / total:.2f}%")
             Accuracy+=100*correct/total
             val_accs.append(100*correct/total)
+            val_losses.append(running_loss/len(val_loader))
     print(f"Final Accuracy: {Accuracy/config['Epochs']}%")
     model.eval()
     with torch.no_grad():
