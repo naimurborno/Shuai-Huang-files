@@ -142,7 +142,7 @@ class AtlasFreeBrainTransformer(nn.Module):
 
         self.classifier = nn.Sequential(
             nn.Linear(embed_dim, 64),
-            nn.GeLU(),
+            nn.GELU(),
             nn.Dropout(0.5),
             nn.Linear(64, num_classes)
         )
