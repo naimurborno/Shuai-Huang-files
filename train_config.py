@@ -15,5 +15,5 @@ config['n_components']=512
 config['use_pca']=False
 config['learning_rate']=2e-4
 config['weight_decay']=0.05
-config['kernel_size']=53
+config['kernel_size']=3
 config['stride']=2
