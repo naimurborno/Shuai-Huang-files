@@ -48,6 +48,7 @@ if __name__ == "__main__":
     model=AtlasFreeBrainTransformer().to(device)
     loss_func=nn.CrossEntropyLoss()
     optimizer=optim.Adam(model.parameters(),lr=config['learning_rate'],weight_decay=config['weight_decay'])
+    Accuracy=0.0
     for epoch in range(config['Epochs']):
         model.train()
         running_loss=0.0
@@ -88,6 +89,9 @@ if __name__ == "__main__":
                 total+=labels.size(0)
                 correct+=(predicted==labels).sum().item()
             print(f"Validation Accuracy: {100*correct / total:.2f}%")
+            Accuracy+=100*correct/total
+    print(f"Final Accuracy: {Accuracy}%")
+
         
 
     
