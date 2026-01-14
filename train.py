@@ -15,10 +15,8 @@ from APPLY_PCA import apply_pca
 from plot import plot_training_curves
 import os 
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-# from data_loader import Dataset, DataLoader
 import train_config
 from dataloader import create_dataloaders
-# Filter the warning.
 import warnings
 
 warnings.filterwarnings(
@@ -31,6 +29,13 @@ if __name__ == "__main__":
     pca_model=PCA(n_components=config['n_components'])
     print("PCA Model Loaded!")
     print("Selected Device:", device)
+    exclude_list=[]
+    for i in os.listdir(config['feature_data_dir']):
+        data=np.load(os.path.join(config['feature_data_dir'],i),allow_pickle=True)
+        data=data.item()['feature_mat']
+        if data.shape[0]!=400:
+            exclude_list.append(i)
+        print(i)
     train_loader, val_loader, test_loader = create_dataloaders(
                                             label_data_dir=config['label_data_dir'],
                                             feature_data_dir=config['feature_data_dir'],
@@ -91,6 +96,10 @@ if __name__ == "__main__":
         train_accs.append(100*correct/total)
         epochs_list.append(epoch)
 
+        ######################################################
+        #_____________________Validation Dataset_____________#
+        ######################################################
+
         model.eval()
         with torch.no_grad():
             correct=0
@@ -117,6 +126,11 @@ if __name__ == "__main__":
             val_accs.append(100*correct/total)
             val_losses.append(running_loss/len(val_loader))
     print(f"Final Accuracy: {Accuracy/config['Epochs']}%")
+
+
+    ######################################################
+    #_________________Test Dataset_______________________#
+    ######################################################
     model.eval()
     with torch.no_grad():
         correct=0

@@ -79,6 +79,7 @@ class BrainROIDataset(Dataset):
             D=features.shape[1]
             zero_row=np.zeros((1,D),dtype=features.dtype)
             features=np.vstack([F, zero_row])
+            return 
         # features = feat_data[self.feature_key].astype(np.float32)  # (400, 1632)
         
         cluster_path=os.path.join(self.cluster_data, f"s_{sid}_cluster_index.npy")
@@ -120,7 +121,6 @@ def create_dataloaders(
     cluster_data_dir,
     batch_size: int = 16,
     num_workers: int = 0,
-    pin_memory: bool = True,
     load_cluster: bool = False,
     val_size: float = 0.15,
     test_size: float = 0.15,
@@ -132,8 +132,8 @@ def create_dataloaders(
     Returns:
         (train_loader, val_loader, test_loader)
     """
-    exclude={4, 6, 173, 175, 211, 232, 293, 319, 344, 378, 381, 391, 427, 461}
-    all_subjects = [i for i in range(1, 501) if i not in exclude]  # 1 to 500
+    # exclude={4, 6, 173, 175, 211, 232, 293, 319, 344, 378, 381, 391, 427, 461}
+    all_subjects =range(1,501) #[i for i in range(1, 501) if i not in exclude]  # 1 to 500
 
     # Stratified split (though binary labels, still good practice)
     train_subjs, temp_subjs = train_test_split(
@@ -160,7 +160,6 @@ def create_dataloaders(
         batch_size=batch_size,
         shuffle=True,
         num_workers=num_workers,
-        pin_memory=pin_memory,
         drop_last=True
     )
 
@@ -169,7 +168,6 @@ def create_dataloaders(
         batch_size=batch_size,
         shuffle=False,
         num_workers=num_workers,
-        pin_memory=pin_memory
     )
 
     test_loader = DataLoader(
@@ -177,7 +175,6 @@ def create_dataloaders(
         batch_size=batch_size,
         shuffle=False,
         num_workers=num_workers,
-        pin_memory=pin_memory
     )
 
     return train_loader, val_loader, test_loader
