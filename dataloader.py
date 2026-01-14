@@ -75,11 +75,11 @@ class BrainROIDataset(Dataset):
 
         feat_data = np.load(feature_path,allow_pickle=True)
         features=feat_data.item()['feature_mat']
-        if features.shape[0]!=400:
-            D=features.shape[1]
-            zero_row=np.zeros((1,D),dtype=features.dtype)
-            features=np.vstack([F, zero_row])
-            return 
+        # if features.shape[0]!=400:
+        #     D=features.shape[1]
+        #     zero_row=np.zeros((1,D),dtype=features.dtype)
+        #     features=np.vstack([F, zero_row])
+        #     return 
         # features = feat_data[self.feature_key].astype(np.float32)  # (400, 1632)
         
         cluster_path=os.path.join(self.cluster_data, f"s_{sid}_cluster_index.npy")
@@ -124,7 +124,8 @@ def create_dataloaders(
     load_cluster: bool = False,
     val_size: float = 0.15,
     test_size: float = 0.15,
-    random_state: int = 42
+    random_state: int = 42,
+    exclude_list: int=[]
 ) -> tuple[DataLoader, DataLoader, DataLoader]:
     """
     Creates train/val/test DataLoaders with standard split (70/15/15 by default)
