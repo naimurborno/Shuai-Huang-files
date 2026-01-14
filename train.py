@@ -51,6 +51,8 @@ if __name__ == "__main__":
     Accuracy=0.0
     for epoch in range(config['Epochs']):
         model.train()
+        correct=0
+        total=0
         running_loss=0.0
         loop=tqdm(train_loader, desc=f"Epoch [{epoch+1}/{config['Epochs']}]")
         for batch in loop:
@@ -63,12 +65,16 @@ if __name__ == "__main__":
             cluster_map=cluster_map.to(torch.long)
             outputs=model(features, cluster_map) #Get prediction from the model
             loss=loss_func(outputs,labels)
+            _,predicted=torch.max(outputs.data,1)
+            total+=labels.size(0)
+            correct+=(predicted==labels).sum().item()
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             running_loss+=loss.item()
             loop.set_postfix(loss=loss.item())
         print(f"Epoch {epoch+1} Complete. Average Loss: {running_loss/len(train_loader):.4f}")
+        print(f"Training Accuracy: {100*correct / total:.2f}%")
 
         model.eval()
         with torch.no_grad():
