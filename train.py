@@ -43,7 +43,7 @@ if __name__ == "__main__":
             dataset_len-=1
     print(f"Subjects without proper shape: {exclude_list}")
 
-    folds, test_loader = create_dataloaders(
+    folds, test_loader, full_loader = create_dataloaders(
                                             label_data_dir=config['label_data_dir'],
                                             feature_data_dir=config['feature_data_dir'],
                                             cluster_data_dir=config['cluster_data_dir'],
@@ -189,9 +189,20 @@ if __name__ == "__main__":
     ######################################################
     #_________________Test Dataset_______________________#
     ######################################################
+    pca_model=PCA(n_components=config['n_components'])
+    all_train_features=[]
+    for batch in full_loader:
+        features=batch['features'].to(device)
+        all_train_features.append(features)
+    all_train_features=torch.cat(all_train_features,dim=0)
+    B,T,F=all_train_features.shape
+    all_train_features=all_train_features.view(B*T,F)
+    all_train_features=all_train_features.to(torch.float32)
+    pca_model.fit(all_train_features)
     y_true=[]
     y_pred=[]
     y_prob=[]
+    model.load_state_dict(torch.load(best_model_path))
     model.eval()
     with torch.no_grad():
         correct=0
