@@ -73,7 +73,8 @@ if __name__ == "__main__":
             for epoch in range(config['Epochs']):
                 model.train()
                 running_loss = 0.0
-                for batch in train_loader:
+                loop=tqdm(train_loader, desc=f"Epoch [{epoch+1}/{config['Epochs']}]")
+                for batch in loop:
                     features = apply_pca(batch['features'].to(device).to(torch.float32), pca_model, True)
                     labels = (batch['label']-1).long().to(device)
                     outputs = model(features, batch['cluster_map'].to(device).to(torch.long))
@@ -84,6 +85,7 @@ if __name__ == "__main__":
                     torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
                     optimizer.step()
                     running_loss += loss.item()
+                    loop.set_postfix(loss=loss.item())
 
                 rep_last_loss = running_loss / len(train_loader)
 
