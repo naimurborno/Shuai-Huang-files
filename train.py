@@ -167,7 +167,7 @@ if __name__ == "__main__":
                 improved=early_stoper.step(val_accs)
                 if improved:
                     best_val_acc=val_accs
-                    torch.save(model.state_dict(),f"best_fold_{fold}.pt")
+                    torch.save(model.state_dict(),f"{config['output_dir']}/best_fold_{fold}.pt")
                 if early_stoper.stop:
                     print("Early_stoppint.")
                     break
