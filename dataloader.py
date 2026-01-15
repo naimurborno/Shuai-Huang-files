@@ -80,7 +80,7 @@ def create_dataloaders(
     random_state: int = 42,
     exclude_list: int=[]
 ):
-    labels_mat = sio.loadmat(label_data_dir)
+    labels_mat = sio.loadmat(os.path.join(label_data_dir,'label.mat'))
     labels = labels_mat['label'].flatten().astype(np.int64)
 
     # exclude={4, 6, 173, 175, 211, 232, 293, 319, 344, 378, 381, 391, 427, 461}
