@@ -28,7 +28,6 @@ def main():
     os.makedirs(features_dir,exist_ok=True)
     os.makedirs(cluster_dir,exist_ok=True)
     print(f"Processing directory: {source}")
-    moved_count = 0
     
     # Single loop through all files
     for filename in os.listdir(source):
@@ -55,10 +54,10 @@ def main():
             save_path=os.path.join(cluster_dir, filename.split('.')[0])
             np.save(save_path,file)
     
-    print(f"\nDone! {moved_count} files were organized.")
+    print(f"\nDone! Files were organized.")
     print(f"Features folder: {features_dir}")
     print(f"Cluster_index_mat folder: {cluster_dir}")
-    print(f"Label file folder: " {source})
+    print(f"Label file folder: {dest}")
 if __name__=="__main__":
     main()
 
