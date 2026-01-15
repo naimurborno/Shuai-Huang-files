@@ -161,15 +161,15 @@ if __name__ == "__main__":
                 spec=tn/(tn+fp) if (tn+fp)>0 else 0
                 auroc= roc_auc_score(y_true,y_prob)
 
-                print(f"Validation Accuracy: {acc:.2f}%")
-                val_accs=acc
+                print(f"Validation Accuracy: {100*acc:.2f}%")
+                val_accs=100*acc
                 improved=early_stoper.step(val_accs)
                 if improved:
                     best_val_acc=val_accs
-                    best_model_path=os.path.join(config['output_dir'],f"best_path_{fold}.pt")
+                    best_model_path=os.path.join(config['output_dir'],f"best_fold_{fold}.pt")
                     torch.save(model.state_dict(),f"{config['output_dir']}/best_fold_{fold}.pt")
                 if early_stoper.stop:
-                    print("Early_stoppint.")
+                    print("Early_stopping.")
                     break
                 val_losses=running_loss/len(val_loader)
                 metrics_records.append({
