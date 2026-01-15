@@ -27,7 +27,7 @@ def plot_training_curves(metrics_df, save_dir="outputs"):
     os.makedirs(save_dir, exist_ok=True)
 
     plt.figure(figsize=(8, 6))
-
+    #Validation accuracy 
     for fold in metrics_df["fold"].unique():
         fold_df = metrics_df[metrics_df["fold"] == fold]
         plt.plot(
@@ -35,17 +35,33 @@ def plot_training_curves(metrics_df, save_dir="outputs"):
             fold_df["val_acc"],
             label=f"Fold {fold}"
         )
-
     plt.xlabel("Epoch")
     plt.ylabel("Validation Accuracy (%)")
     plt.title("Validation Accuracy per Fold")
     plt.legend()
     plt.grid(True)
-
     save_path = os.path.join(save_dir, "val_accuracy_per_fold.png")
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.close()
 
+    #Training Accuracy
+    for fold in metrics_df["fold"].unique():
+        fold_df = metrics_df[metrics_df["fold"] == fold]
+        plt.plot(
+            fold_df["epoch"],
+            fold_df["train_acc"],
+            label=f"Fold {fold}"
+        )
+    plt.xlabel("Epoch")
+    plt.ylabel("Training Accuracy (%)")
+    plt.title("Training Accuracy per Fold")
+    plt.legend()
+    plt.grid(True)
+    save_path = os.path.join(save_dir, "train_accuracy_per_fold.png")
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
+    plt.close()
+
+    #Validation Loss
     for fold in metrics_df["fold"].unique():
         fold_df=metrics_df[metrics_df['fold']==fold]
         plt.plot(
@@ -59,6 +75,23 @@ def plot_training_curves(metrics_df, save_dir="outputs"):
     plt.legend()
     plt.grid(True)
     save_path=os.path.join(save_dir,"val_loss_per_fold.png")
+    plt.savefig(save_path,dpi=300,bbox_inches="tight")
+    plt.close()
+
+    #Training Loss
+    for fold in metrics_df["fold"].unique():
+        fold_df=metrics_df[metrics_df['fold']==fold]
+        plt.plot(
+            fold_df['epoch'],
+            fold_df['train_loss'],
+            label=f"Fold{fold}"
+        )
+    plt.xlabel("Epoch")
+    plt.ylabel("Train Loss")
+    plt.title("Train Loss per Fold")
+    plt.legend()
+    plt.grid(True)
+    save_path=os.path.join(save_dir,"train_loss_per_fold.png")
     plt.savefig(save_path,dpi=300,bbox_inches="tight")
     plt.close()
 

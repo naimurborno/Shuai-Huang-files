@@ -1,7 +1,7 @@
 # import argparse
 import numpy as np
 import torch
-from transformers import AutoModelForSequenceClassification, AutoTokenizer, get_linear_schedule_with_warmup
+# from transformers import AutoModelForSequenceClassification, AutoTokenizer, get_linear_schedule_with_warmup
 from torch.optim import AdamW, Adam
 from sklearn.metrics import accuracy_score, classification_report
 from torch import nn
@@ -52,6 +52,7 @@ if __name__ == "__main__":
                                         )
     
     metrics_records=[]
+    best_model_path=''
     for fold,(train_loader,val_loader) in enumerate(folds):
         print(f"Training for fold: {fold+1}")
         print(".............................")
@@ -165,6 +166,7 @@ if __name__ == "__main__":
                 improved=early_stoper.step(val_accs)
                 if improved:
                     best_val_acc=val_accs
+                    best_model_path=os.path.join(config['output_dir'],f"best_path_{fold}.pt")
                     torch.save(model.state_dict(),f"{config['output_dir']}/best_fold_{fold}.pt")
                 if early_stoper.stop:
                     print("Early_stoppint.")
@@ -181,8 +183,6 @@ if __name__ == "__main__":
                         "val_specificity" : spec,  
                         "val_AUROC" : auroc 
                     })
-        # print(f"Final Accuracy: {Accuracy/config['Epochs']:.2f}%")
-        
         print(f"Finish Training for Fold: {fold+1}")
         print("...................................")
 
@@ -232,9 +232,6 @@ if __name__ == "__main__":
     csv_path=os.path.join(config['output_dir'],"metrics.csv")
     metrics_df.to_csv(csv_path,index=False)
     print(f'Val_Accuracy: {metrics_df['val_acc'].mean():.2f}±{metrics_df['val_acc'].std():.2f}|Val_sensitivity: {metrics_df['val_sensitivity'].mean():.2f}±{metrics_df['val_sensitivity'].std():.2f}| Val_Specificity: {metrics_df['val_specificity'].mean():.2f}±{metrics_df['val_specificity'].std():.2f} |  Val_AUROC : {metrics_df['val_AUROC'].mean():.2f}± {metrics_df['val_AUROC'].std():.2f}')
-
     print(f"Saved_metrics to {csv_path}")
-    
     plot_training_curves(metrics_df,save_dir=config['output_dir'])
     
-
