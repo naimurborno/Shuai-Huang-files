@@ -1,12 +1,11 @@
 # import argparse
 import numpy as np
 import torch
-# from transformers import AutoModelForSequenceClassification, AutoTokenizer, get_linear_schedule_with_warmup
 from torch.optim import AdamW, Adam
 from sklearn.metrics import accuracy_score, classification_report
 from torch import nn
 from collections import defaultdict
-from torch import cuda, nn,optim
+from torch import cuda, nn, optim
 from tqdm import tqdm
 from datetime import datetime
 from AFT import AtlasFreeBrainTransformer
@@ -28,19 +27,19 @@ warnings.filterwarnings(
 )
 
 if __name__ == "__main__":
-    # Get the config file
     config = train_config.config
-    device=torch.device("cuda" if torch.cuda.is_available() else "cpu") 
-    os.makedirs(config['output_dir'],exist_ok=True)
-    exclude_list=[]
-    dataset_len=0
-    for i in os.listdir(config['feature_data_dir']): #Iterating through feature matrix to find the subjects without proper shapes and final dataset length after excluding them
-        data=np.load(os.path.join(config['feature_data_dir'],i),allow_pickle=True)
-        data=data.item()['feature_mat']
-        dataset_len+=1
-        if data.shape[0]!=400:
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
+    os.makedirs(config['output_dir'], exist_ok=True)
+    
+    exclude_list = []
+    dataset_len = 0
+    for i in os.listdir(config['feature_data_dir']):
+        data = np.load(os.path.join(config['feature_data_dir'], i), allow_pickle=True)
+        data = data.item()['feature_mat']
+        dataset_len += 1
+        if data.shape[0] != 400:
             exclude_list.append(int(i.split('_')[1]))
-            dataset_len-=1
+            dataset_len -= 1
     print(f"Subjects without proper shape: {exclude_list}")
 
     folds, test_loader, full_loader = create_dataloaders(
@@ -51,198 +50,165 @@ if __name__ == "__main__":
                                             exclude_list=exclude_list
                                         )
     
-    metrics_records=[]
-    best_model_path=''
-    for fold,(train_loader,val_loader) in enumerate(folds):
-        print(f"Training for fold: {fold+1}")
-        print(".............................")
-        early_stoper=EarlyStopping(patience=10)
-        pca_model=PCA(n_components=config['n_components'])
+    metrics_records = []      # To store every epoch for plotting
+    best_metrics_per_fold = [] # To store only the best epoch per fold for final stats
+    absolute_best_val_acc = 0.0
+    best_overall_model_path = ''
+    best_pca_model = None
 
-        #1.Fitting PCA model on Train Set
-        all_train_features=[]
+    for fold, (train_loader, val_loader) in enumerate(folds):
+        print(f"\nTraining for fold: {fold+1}")
+        print(".............................")
+        early_stoper = EarlyStopping(patience=10)
+        pca_model = PCA(n_components=config['n_components'])
+
+        # 1. Fitting PCA model on Train Set
+        all_train_features = []
         for batch in train_loader:
-            features=batch['features'].to(device)
+            features = batch['features'].to(device)
             all_train_features.append(features)
-        all_train_features=torch.cat(all_train_features,dim=0)
-        B,T,F=all_train_features.shape
-        all_train_features=all_train_features.view(B*T,F)
-        all_train_features=all_train_features.to(torch.float32)
+        all_train_features = torch.cat(all_train_features, dim=0)
+        B, T, F = all_train_features.shape
+        all_train_features = all_train_features.view(B*T, F).to(torch.float32)
         pca_model.fit(all_train_features)
 
-        train_losses=[]
-        train_accs=[]
-        val_losses=[]
-        val_accs=[]
+        model = AtlasFreeBrainTransformer().to(device)
+        loss_func = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model.parameters(), lr=config['learning_rate'], weight_decay=config['weight_decay'])
+        
+        fold_best_val_acc = 0.0
+        fold_best_metrics = {}
 
-        model=AtlasFreeBrainTransformer().to(device)
-        loss_func=nn.CrossEntropyLoss()
-        optimizer=optim.Adam(model.parameters(),lr=config['learning_rate'],weight_decay=config['weight_decay'])
-        best_val_acc=0.0
-        ###############################################
-        #_____________Train On Train Set______________#
-        ###############################################
         for epoch in range(config['Epochs']):
             model.train()
-
-            correct=0
-            total=0
-            running_loss=0.0
-            loop=tqdm(train_loader, desc=f"Epoch [{epoch+1}/{config['Epochs']}]")
+            correct, total, running_loss = 0, 0, 0.0
+            loop = tqdm(train_loader, desc=f"Fold {fold+1} Epoch [{epoch+1}/{config['Epochs']}]")
 
             for batch in loop:
-                features=batch['features'].to(device)
-                features=features.to(torch.float32)
-                features=apply_pca(features,pca_model=pca_model,train_data=True) #Pca Application on Feature matrix to reduce dimensionality ([Batch, 400, 1632] -> [Batch, 400, 512])
+                features = batch['features'].to(device).to(torch.float32)
+                features = apply_pca(features, pca_model=pca_model, train_data=True)
+                labels = (batch['label']-1).long().to(device)
+                cluster_map = batch['cluster_map'].to(device).to(torch.long)
 
-                labels=(batch['label']-1).long().to(device)
-                # labels=labels.to(device) #Shape ([Batch, ])
-
-                cluster_map=batch['cluster_map'].to(device)
-                cluster_map=cluster_map.to(torch.long) #shape ([Batch, 45, 54, 45])
-
-                outputs=model(features, cluster_map) #Model Output
-
-                loss=loss_func(outputs,labels)
-                _,predicted=torch.max(outputs.data,1)
-                total+=labels.size(0)
-                correct+=(predicted==labels).sum().item()
+                outputs = model(features, cluster_map)
+                loss = loss_func(outputs, labels)
+                
                 optimizer.zero_grad()
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(),max_norm=1.0) # Gradient Norm clipping to prevent exploding gradients
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 optimizer.step()
-                running_loss+=loss.item()
+
+                _, predicted = torch.max(outputs.data, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
+                running_loss += loss.item()
                 loop.set_postfix(loss=loss.item())
 
-            print(f"Epoch {epoch+1} Complete. Average Loss: {running_loss/len(train_loader):.4f}")
-            print(f"Training Accuracy: {100*correct / total:.2f}%")
-            train_loss=running_loss/len(train_loader)
-            train_accs=100*correct/total
+            train_loss = running_loss / len(train_loader)
+            train_acc = 100 * correct / total
 
-            ######################################################
-            #______________Test On Val Set_______________________#
-            ######################################################
-            y_true=[]
-            y_pred=[]
-            y_prob=[]
+            # Validation Phase
             model.eval()
+            y_true, y_pred, y_prob = [], [], []
+            val_running_loss = 0.0
+            
             with torch.no_grad():
-                correct=0
-                total=0
-                running_loss=0.0
                 for batch in val_loader:
-                    features=batch['features'].to(device)
-                    features=features.to(torch.float32)
-                    features=apply_pca(features,pca_model=pca_model,train_data=False) #
+                    features = batch['features'].to(device).to(torch.float32)
+                    features = apply_pca(features, pca_model=pca_model, train_data=False)
+                    labels = (batch['label']-1).long().to(device)
+                    cluster_map = batch['cluster_map'].to(device).to(torch.long)
 
-                    labels=(batch['label']-1).long().to(device)
-
-                    cluster_map=batch['cluster_map'].to(device)
-                    cluster_map=cluster_map.to(torch.long)
-
-                    # labels=labels.to(device)
-                    outputs=model(features,cluster_map)
-
-                    probs=torch.softmax(outputs,dim=1)[:,1]
-
-                    loss=loss_func(outputs,labels)
-                    _,predicted=torch.max(outputs.data, 1)
-                    running_loss+=loss.item()
-                    total+=labels.size(0)
-                    correct+=(predicted==labels).sum().item()
-
+                    outputs = model(features, cluster_map)
+                    probs = torch.softmax(outputs, dim=1)[:, 1]
+                    loss = loss_func(outputs, labels)
+                    
+                    _, predicted = torch.max(outputs.data, 1)
+                    val_running_loss += loss.item()
                     y_true.extend(labels.cpu().numpy())
                     y_pred.extend(predicted.cpu().numpy())
                     y_prob.extend(probs.cpu().numpy())
-                tn,fp,fn,tp=confusion_matrix(y_true,y_pred,labels=[0,1]).ravel()
-                #metrics Calculation
-                acc=accuracy_score(y_true,y_pred)
-                sens=tp/(tp+fn) if (tp+fn)>0 else 0
-                spec=tn/(tn+fp) if (tn+fp)>0 else 0
-                auroc= roc_auc_score(y_true,y_prob)
 
-                print(f"Validation Accuracy: {100*acc:.2f}%")
-                val_accs=100*acc
-                improved=early_stoper.step(val_accs)
-                if improved:
-                    best_val_acc=val_accs
-                    best_model_path=os.path.join(config['output_dir'],f"best_fold_{fold}.pt")
-                    torch.save(model.state_dict(),f"{config['output_dir']}/best_fold_{fold}.pt")
-                if early_stoper.stop:
-                    print("Early_stopping.")
-                    break
-                val_losses=running_loss/len(val_loader)
-                metrics_records.append({
-                        "fold": fold+1,
-                        "epoch": epoch+1,
-                        "train_loss": train_loss,
-                        "train_acc": train_accs,
-                        "val_loss": val_losses,
-                        "val_acc": val_accs,
-                        "val_sensitivity": sens,
-                        "val_specificity" : spec,  
-                        "val_AUROC" : auroc 
-                    })
-        print(f"Finish Training for Fold: {fold+1}")
-        print("...................................")
+            val_acc = accuracy_score(y_true, y_pred) * 100
+            val_loss = val_running_loss / len(val_loader)
+            tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
+            sens = tp/(tp+fn) if (tp+fn) > 0 else 0
+            spec = tn/(tn+fp) if (tn+fp) > 0 else 0
+            auroc = roc_auc_score(y_true, y_prob)
+
+            current_metrics = {
+                "fold": fold+1, "epoch": epoch+1, "train_loss": train_loss,
+                "train_acc": train_acc, "val_loss": val_loss, "val_acc": val_acc,
+                "val_sensitivity": sens, "val_specificity": spec, "val_AUROC": auroc
+            }
+            metrics_records.append(current_metrics)
+
+            # Check if this is the best epoch for the CURRENT fold
+            improved = early_stoper.step(val_acc)
+            if val_acc > fold_best_val_acc:
+                fold_best_val_acc = val_acc
+                fold_best_metrics = current_metrics
+                fold_model_path = os.path.join(config['output_dir'], f"best_fold_{fold+1}.pt")
+                torch.save(model.state_dict(), fold_model_path)
+                
+                # Check if this is the best model OVERALL folds for the final test set
+                if val_acc > absolute_best_val_acc:
+                    absolute_best_val_acc = val_acc
+                    best_overall_model_path = fold_model_path
+                    best_pca_model = pca_model
+
+            if early_stoper.stop:
+                print("Early stopping triggered for this fold.")
+                break
+
+        best_metrics_per_fold.append(fold_best_metrics)
+        print(f"Fold {fold+1} Best Val Acc: {fold_best_val_acc:.2f}%")
 
     ######################################################
-    #_________________Test Dataset_______________________#
+    #_________________Final Test Dataset_________________#
     ######################################################
-    pca_model=PCA(n_components=config['n_components'])
-    all_train_features=[]
-    for batch in full_loader:
-        features=batch['features'].to(device)
-        all_train_features.append(features)
-    all_train_features=torch.cat(all_train_features,dim=0)
-    B,T,F=all_train_features.shape
-    all_train_features=all_train_features.view(B*T,F)
-    all_train_features=all_train_features.to(torch.float32)
-    pca_model.fit(all_train_features)
-    y_true=[]
-    y_pred=[]
-    y_prob=[]
-    model.load_state_dict(torch.load(best_model_path))
+    print("\nEvaluating Best Overall Model on Test Set...")
+    model.load_state_dict(torch.load(best_overall_model_path))
     model.eval()
+    
+    y_true, y_pred, y_prob = [], [], []
     with torch.no_grad():
-        correct=0
-        total=0
         for batch in test_loader:
-            features=batch['features'].to(device)
-            features=features.to(torch.float32)
-            features=apply_pca(features,pca_model=pca_model,train_data=False)
+            features = batch['features'].to(device).to(torch.float32)
+            # Use the PCA model from the best performing fold
+            features = apply_pca(features, pca_model=best_pca_model, train_data=False)
+            labels = (batch['label']-1).long().to(device)
+            cluster_map = batch['cluster_map'].to(device).to(torch.long)
 
-            labels=(batch['label']-1).long().to(device)
-
-            cluster_map=batch['cluster_map'].to(device)
-            cluster_map=cluster_map.to(torch.long)
-
-            outputs=model(features, cluster_map)
-            probs=torch.softmax(outputs,dim=1)[:,1]
-            _,predicted=torch.max(outputs.data,1)
-            total+=labels.size(0)
-            correct+=(predicted==labels).sum().item()
+            outputs = model(features, cluster_map)
+            probs = torch.softmax(outputs, dim=1)[:, 1]
+            _, predicted = torch.max(outputs.data, 1)
+            
             y_true.extend(labels.cpu().numpy())
             y_pred.extend(predicted.cpu().numpy())
             y_prob.extend(probs.cpu().numpy())
-        tn,fp,fn,tp=confusion_matrix(y_true,y_pred,labels=[0,1]).ravel()
-        #metrics Calculation for test set
-        acc=accuracy_score(y_true,y_pred)
-        sens=tp/(tp+fn) if (tp+fn)>0 else 0
-        spec=tn/(tn+fp) if (tn+fp)>0 else 0
-        auroc= roc_auc_score(y_true,y_prob)
-        print(f"Accuracy: {acc:.2f}, Sensitivity: {sens:.2f}, Specificity: {spec:.2f}, AUROC: {auroc:.2f}")
-        metrics_records.append({
-            "test_acc" : acc,
-            "test_sensitivity" : sens,
-            "test_specificity": spec,
-            "test_AUROC": auroc
-        })
+
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
+    test_acc = accuracy_score(y_true, y_pred)
+    test_sens = tp/(tp+fn) if (tp+fn) > 0 else 0
+    test_spec = tn/(tn+fp) if (tn+fp) > 0 else 0
+    test_auroc = roc_auc_score(y_true, y_prob)
+
+    print(f"Test Results -> Acc: {test_acc:.2f}, Sens: {test_sens:.2f}, Spec: {test_spec:.2f}, AUC: {test_auroc:.2f}")
+
+    # Data Handling for Export
+    metrics_df = pd.DataFrame(metrics_records)
+    best_metrics_df = pd.DataFrame(best_metrics_per_fold)
     
-    metrics_df=pd.DataFrame(metrics_records)
-    csv_path=os.path.join(config['output_dir'],"metrics.csv")
-    metrics_df.to_csv(csv_path,index=False)
-    print(f'Val_Accuracy: {metrics_df['val_acc'].mean():.2f}±{metrics_df['val_acc'].std():.2f}|Val_sensitivity: {metrics_df['val_sensitivity'].mean():.2f}±{metrics_df['val_sensitivity'].std():.2f}| Val_Specificity: {metrics_df['val_specificity'].mean():.2f}±{metrics_df['val_specificity'].std():.2f} |  Val_AUROC : {metrics_df['val_AUROC'].mean():.2f}± {metrics_df['val_AUROC'].std():.2f}')
-    print(f"Saved_metrics to {csv_path}")
-    plot_training_curves(metrics_df,save_dir=config['output_dir'])
+    csv_path = os.path.join(config['output_dir'], "all_epochs_metrics.csv")
+    metrics_df.to_csv(csv_path, index=False)
     
+    # Calculate Cross-Validation Stats using only the best from each fold
+    cv_acc_mean = best_metrics_df['val_acc'].mean()
+    cv_acc_std = best_metrics_df['val_acc'].std()
+    
+    print(f"\nFinal CV Results (Best Epoch per Fold):")
+    print(f"Val Accuracy: {cv_acc_mean:.2f} ± {cv_acc_std:.2f}")
+    print(f"Val AUROC: {best_metrics_df['val_AUROC'].mean():.2f} ± {best_metrics_df['val_AUROC'].std():.2f}")
+    
+    plot_training_curves(metrics_df, save_dir=config['output_dir'])

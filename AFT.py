@@ -17,13 +17,6 @@ class FFN(nn.Module):
     def forward(self, F_roi):
         # F_roi: (B, 400, 1632)
         return self.net(F_roi)  # (B, 400, out_dim)
-    
-class PositionalEncoding(nn.Module):
-    def __init__(self, dim, max_tokens=1000):
-        super().__init__()
-        self.pos_embed=nn.Parameter(
-            torch.randn(1,max_tokens,dim)
-        )
 
 def extract_nodes(Q, kernel_size=3, stride=2):
     batch_size, channels, d,h,w=Q.shape
@@ -102,7 +95,7 @@ class AtlasFreeBrainTransformer(nn.Module):
             nn.Linear(embed_dim, 256),
             nn.GELU(),
             nn.Dropout(0.5),
-            nn.Linear(255, 128),
+            nn.Linear(256, 128),
             nn.ReLU(),
             nn.Dropout(0.5),
             nn.Linear(128,num_classes)
