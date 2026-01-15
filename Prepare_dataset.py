@@ -57,7 +57,7 @@ def main():
     print(f"\nDone! Files were organized.")
     print(f"Features folder: {features_dir}")
     print(f"Cluster_index_mat folder: {cluster_dir}")
-    print(f"Label file folder: {dest}")
+    print(f"Label file folder: {os.path.join(dest,'label.mat')}")
 if __name__=="__main__":
     main()
 
