@@ -222,11 +222,11 @@ if __name__ == "__main__":
         sens=tp/(tp+fn) if (tp+fn)>0 else 0
         spec=tn/(tn+fp) if (tn+fp)>0 else 0
         auroc= roc_auc_score(y_true,y_prob)
-        print(f"Accuracy: {acc}, Sensitivity: {sens}, Specivity: {spec}, AUROC: {auroc}")
+        print(f"Accuracy: {acc}, Sensitivity: {sens}, Specificity: {spec}, AUROC: {auroc}")
         metrics_records.append({
             "test_acc" : acc,
             "test_sensitivity" : sens,
-            "test_specivity": spec,
+            "test_specificity": spec,
             "test_AUROC": auroc
         })
     
@@ -234,6 +234,8 @@ if __name__ == "__main__":
     os.makedirs(config['output_dir'],exist_ok=True)
     csv_path=os.path.join(config['output_dir'],"metrics.csv")
     metrics_df.to_csv(csv_path,index=False)
+    print(f'Val_Accuracy: {metrics_df['val_acc'].mean()}±{metrics_df['val_acc'].std()}|Val_sensitivity: {metrics_df['val_sensitivity'].mean()}±{metrics_df['val_sensitivity'].std()}| Val_Specificity: {metrics_df['val_specificity'].mean()}±{metrics_df['val_specificity'].std()} |  Val_AUROC : {metrics_df['val_AUROC'].mean()}± {metrics_df['val_AUROC'].std()}')
+
     print(f"Saved_metrics to {csv_path}")
     
     plot_training_curves(metrics_df,save_dir=config['output_dir'])
