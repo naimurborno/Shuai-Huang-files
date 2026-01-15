@@ -31,7 +31,7 @@ if __name__ == "__main__":
     # Get the config file
     config = train_config.config
     device=torch.device("cuda" if torch.cuda.is_available() else "cpu") 
-
+    os.makedirs(config['output_dir'],exist_ok=True)
     exclude_list=[]
     dataset_len=0
     for i in os.listdir(config['feature_data_dir']): #Iterating through feature matrix to find the subjects without proper shapes and final dataset length after excluding them
@@ -231,7 +231,6 @@ if __name__ == "__main__":
         })
     
     metrics_df=pd.DataFrame(metrics_records)
-    os.makedirs(config['output_dir'],exist_ok=True)
     csv_path=os.path.join(config['output_dir'],"metrics.csv")
     metrics_df.to_csv(csv_path,index=False)
     print(f'Val_Accuracy: {metrics_df['val_acc'].mean()}±{metrics_df['val_acc'].std()}|Val_sensitivity: {metrics_df['val_sensitivity'].mean()}±{metrics_df['val_sensitivity'].std()}| Val_Specificity: {metrics_df['val_specificity'].mean()}±{metrics_df['val_specificity'].std()} |  Val_AUROC : {metrics_df['val_AUROC'].mean()}± {metrics_df['val_AUROC'].std()}')
