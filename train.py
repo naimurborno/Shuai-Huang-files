@@ -188,14 +188,12 @@ if __name__ == "__main__":
         print(f"Finish Training for Fold: {fold+1}")
         print("...................................")
 
-    metrics_df=pd.DataFrame(metrics_records)
-    os.makedirs(config['output_dir'],exist_ok=True)
-    csv_path=os.path.join(config['output_dir'],"metrics.csv")
-    metrics_df.to_csv(csv_path,index=False)
-    print(f"Saved_metrics to {csv_path}")
     ######################################################
     #_________________Test Dataset_______________________#
     ######################################################
+    y_true=[]
+    y_pred=[]
+    y_prob=[]
     model.eval()
     with torch.no_grad():
         correct=0
@@ -204,16 +202,39 @@ if __name__ == "__main__":
             features=batch['features'].to(device)
             features=features.to(torch.float32)
             features=apply_pca(features,pca_model=pca_model,train_data=False)
-            labels=batch['label']-1
+
+            labels=(batch['label']-1).long().to(device)
+
             cluster_map=batch['cluster_map'].to(device)
             cluster_map=cluster_map.to(torch.long)
-            labels=labels.to(device)
+
             outputs=model(features, cluster_map)
+            probs=torch.softmax(outputs,dim=1)[:,1]
             _,predicted=torch.max(outputs.data,1)
             total+=labels.size(0)
             correct+=(predicted==labels).sum().item()
-        print(f"Test Accuracy: {100*correct/ total:.2f}%")
-    print(train_losses, train_accs)
+            y_true.extend(labels.cpu().numpy())
+            y_pred.extend(predicted.cpu().numpy())
+            y_prob.extend(probs.cpu().numpy())
+        tn,fp,fn,tp=confusion_matrix(y_true,y_pred,labels=[0,1]).ravel()
+        #metrics Calculation for test set
+        acc=accuracy_score(y_true,y_pred)
+        sens=tp/(tp+fn) if (tp+fn)>0 else 0
+        spec=tn/(tn+fp) if (tn+fp)>0 else 0
+        auroc= roc_auc_score(y_true,y_prob)
+        print(f"Accuracy: {acc}, Sensitivity: {sens}, Specivity: {spec}, AUROC: {auroc}")
+        metrics_records.append({
+            "test_acc" : acc,
+            "test_sensitivity" : sens,
+            "test_specivity": spec,
+            "test_AUROC": auroc
+        })
+    
+    metrics_df=pd.DataFrame(metrics_records)
+    os.makedirs(config['output_dir'],exist_ok=True)
+    csv_path=os.path.join(config['output_dir'],"metrics.csv")
+    metrics_df.to_csv(csv_path,index=False)
+    print(f"Saved_metrics to {csv_path}")
     
     plot_training_curves(metrics_df,save_dir=config['output_dir'])
     

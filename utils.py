@@ -59,7 +59,7 @@ def plot_training_curves(metrics_df, save_dir="outputs"):
     plt.legend()
     plt.grid(True)
     save_path=os.path.join(save_dir,"val_loss_per_fold.png")
-    plt.savefig(save_path,dpi=300,bbox_inces="tight")
+    plt.savefig(save_path,dpi=300,bbox_inches="tight")
     plt.close()
 
     print(f"Training curves saved to: {save_path}")
