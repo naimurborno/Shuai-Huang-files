@@ -180,7 +180,8 @@ if __name__ == "__main__":
                         "val_loss": val_losses,
                         "val_acc": val_accs,
                         "val_sensitivity": sens,
-                        "val_specificity" : spec,   
+                        "val_specificity" : spec,  
+                        "val_AUROC" : auroc 
                     })
         print(f"Final Accuracy: {Accuracy/config['Epochs']}%")
         
