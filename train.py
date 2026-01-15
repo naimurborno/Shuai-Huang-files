@@ -78,7 +78,6 @@ if __name__ == "__main__":
         loss_func=nn.CrossEntropyLoss()
         optimizer=optim.Adam(model.parameters(),lr=config['learning_rate'],weight_decay=config['weight_decay'])
         best_val_acc=0.0
-        Accuracy=0.0
         ###############################################
         #_____________Train On Train Set______________#
         ###############################################
@@ -161,9 +160,8 @@ if __name__ == "__main__":
                 spec=tn/(tn+fp) if (tn+fp)>0 else 0
                 auroc= roc_auc_score(y_true,y_prob)
 
-                print(f"Validation Accuracy: {100*correct / total:.2f}%")
-                Accuracy+=100*correct/total
-                val_accs=100*correct/total
+                print(f"Validation Accuracy: {acc:.2f}%")
+                val_accs=acc
                 improved=early_stoper.step(val_accs)
                 if improved:
                     best_val_acc=val_accs
@@ -183,7 +181,7 @@ if __name__ == "__main__":
                         "val_specificity" : spec,  
                         "val_AUROC" : auroc 
                     })
-        print(f"Final Accuracy: {Accuracy/config['Epochs']}%")
+        # print(f"Final Accuracy: {Accuracy/config['Epochs']:.2f}%")
         
         print(f"Finish Training for Fold: {fold+1}")
         print("...................................")
@@ -222,7 +220,7 @@ if __name__ == "__main__":
         sens=tp/(tp+fn) if (tp+fn)>0 else 0
         spec=tn/(tn+fp) if (tn+fp)>0 else 0
         auroc= roc_auc_score(y_true,y_prob)
-        print(f"Accuracy: {acc}, Sensitivity: {sens}, Specificity: {spec}, AUROC: {auroc}")
+        print(f"Accuracy: {acc:.2f}, Sensitivity: {sens:.2f}, Specificity: {spec:.2f}, AUROC: {auroc:.2f}")
         metrics_records.append({
             "test_acc" : acc,
             "test_sensitivity" : sens,
@@ -233,7 +231,7 @@ if __name__ == "__main__":
     metrics_df=pd.DataFrame(metrics_records)
     csv_path=os.path.join(config['output_dir'],"metrics.csv")
     metrics_df.to_csv(csv_path,index=False)
-    print(f'Val_Accuracy: {metrics_df['val_acc'].mean()}±{metrics_df['val_acc'].std()}|Val_sensitivity: {metrics_df['val_sensitivity'].mean()}±{metrics_df['val_sensitivity'].std()}| Val_Specificity: {metrics_df['val_specificity'].mean()}±{metrics_df['val_specificity'].std()} |  Val_AUROC : {metrics_df['val_AUROC'].mean()}± {metrics_df['val_AUROC'].std()}')
+    print(f'Val_Accuracy: {metrics_df['val_acc'].mean():.2f}±{metrics_df['val_acc'].std():.2f}|Val_sensitivity: {metrics_df['val_sensitivity'].mean():.2f}±{metrics_df['val_sensitivity'].std():.2f}| Val_Specificity: {metrics_df['val_specificity'].mean():.2f}±{metrics_df['val_specificity'].std():.2f} |  Val_AUROC : {metrics_df['val_AUROC'].mean():.2f}± {metrics_df['val_AUROC'].std():.2f}')
 
     print(f"Saved_metrics to {csv_path}")
     
