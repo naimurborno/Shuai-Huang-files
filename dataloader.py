@@ -86,28 +86,28 @@ def create_dataloaders(
     # exclude={4, 6, 173, 175, 211, 232, 293, 319, 344, 378, 381, 391, 427, 461}
     all_subjects =[i for i in range(1, len(labels)+1) if i not in exclude_list] # Excluding Subjects which does not have proper shape
 
-    trainval_subjs, test_subjs = train_test_split(
-        all_subjects,
-        test_size=test_size,
-        random_state=random_state
-    )
-    test_ds  = BRDataset(test_subjs,  label_data_dir, feature_data_dir, cluster_data_dir)   
-    full_ds=BRDataset(trainval_subjs, label_data_dir, feature_data_dir, cluster_data_dir)
+    # trainval_subjs, test_subjs = train_test_split(
+    #     all_subjects,
+    #     test_size=test_size,
+    #     random_state=random_state
+    # )
+    # test_ds  = BRDataset(test_subjs,  label_data_dir, feature_data_dir, cluster_data_dir)   
+    # full_ds=BRDataset(trainval_subjs, label_data_dir, feature_data_dir, cluster_data_dir)
     trainval_subjs=np.array(all_subjects)
     
 
-    test_loader = DataLoader(
-        test_ds,
-        batch_size=batch_size,
-        shuffle=False,
-        num_workers=num_workers,
-    )
-    full_loader=DataLoader(
-        full_ds,
-        batch_size=batch_size,
-        shuffle=False,
-        num_workers=num_workers
-    )
+    # test_loader = DataLoader(
+    #     test_ds,
+    #     batch_size=batch_size,
+    #     shuffle=False,
+    #     num_workers=num_workers,
+    # )
+    # full_loader=DataLoader(
+    #     full_ds,
+    #     batch_size=batch_size,
+    #     shuffle=False,
+    #     num_workers=num_workers
+    # )
 
     skf=StratifiedKFold(n_splits=config['n_split'],shuffle=True, random_state=random_state)
     folds=[]
@@ -136,5 +136,5 @@ def create_dataloaders(
 
         folds.append((train_loader,val_loader))
 
-    return folds, test_loader, full_loader
+    return folds
 

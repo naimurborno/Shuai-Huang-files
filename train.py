@@ -45,13 +45,13 @@ if __name__ == "__main__":
 
 
     
-    folds, test_loader, full_loader = create_dataloaders(
-                                            label_data_dir=config['label_data_dir'],
-                                            feature_data_dir=config['feature_data_dir'],
-                                            cluster_data_dir=config['cluster_data_dir'],
-                                            batch_size=config['batch_size'],
-                                            exclude_list=exclude_list
-                                        )
+    folds= create_dataloaders(
+                            label_data_dir=config['label_data_dir'],
+                            feature_data_dir=config['feature_data_dir'],
+                            cluster_data_dir=config['cluster_data_dir'],
+                            batch_size=config['batch_size'],
+                            exclude_list=exclude_list
+                        )
     
     metrics_records = []      # To store every epoch for plotting
     best_metrics_per_fold = [] # To store only the best epoch per fold for final stats
@@ -167,39 +167,6 @@ if __name__ == "__main__":
         best_metrics_per_fold.append(fold_best_metrics)
         print(f"Fold {fold+1} Best Val Acc: {fold_best_val_acc:.2f}%")
 
-    ######################################################
-    #_________________Final Test Dataset_________________#
-    ######################################################
-    print("\nEvaluating Best Overall Model on Test Set...")
-    model.load_state_dict(torch.load(best_overall_model_path))
-    model.eval()
-    
-    y_true, y_pred, y_prob = [], [], []
-    with torch.no_grad():
-        for batch in test_loader:
-            features = batch['features'].to(device).to(torch.float32)
-            # Use the PCA model from the best performing fold
-            features = apply_pca(features, pca_model=best_pca_model, train_data=False)
-            labels = (batch['label']-1).long().to(device)
-            cluster_map = batch['cluster_map'].to(device).to(torch.long)
-
-            outputs = model(features, cluster_map)
-            probs = torch.softmax(outputs, dim=1)[:, 1]
-            _, predicted = torch.max(outputs.data, 1)
-            
-            y_true.extend(labels.cpu().numpy())
-            y_pred.extend(predicted.cpu().numpy())
-            y_prob.extend(probs.cpu().numpy())
-
-    tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
-    test_acc = accuracy_score(y_true, y_pred)
-    test_sens = tp/(tp+fn) if (tp+fn) > 0 else 0
-    test_spec = tn/(tn+fp) if (tn+fp) > 0 else 0
-    test_auroc = roc_auc_score(y_true, y_prob)
-
-    print(f"Test Results -> Acc: {test_acc:.2f}, Sens: {test_sens:.2f}, Spec: {test_spec:.2f}, AUC: {test_auroc:.2f}")
-
-    # Data Handling for Export
     metrics_df = pd.DataFrame(metrics_records)
     best_metrics_df = pd.DataFrame(best_metrics_per_fold)
     
