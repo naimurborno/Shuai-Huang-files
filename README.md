@@ -1,9 +1,3 @@
-# Project README
-
-This repository contains code to prepare a custom dataset and train a model that expects features, cluster indices, and binary labels in a specific format.
-
----
-
 ## 1. Dataset Format (Input)
 
 Your **raw dataset must be stored in a single directory** and contain the following `.mat` files:
@@ -95,6 +89,7 @@ The training script will automatically load the processed data and begin trainin
 ---
 
 ## 6. Notes
+
 * Do **not** skip the dataset preparation step. The training code will not work with raw `.mat` files.
 * Ensure all paths in `train_config.py` are correct and absolute if possible.
 * The model assumes **binary classification**.
