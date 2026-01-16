@@ -75,6 +75,12 @@ Also configure the required hyperparameters in the same file:
 Make sure these values match your dataset and experimental setup.
 
 ---
+## 4. Install Package
+Please install this package before starting training
+
+```bash
+pip install torch_pca
+```
 
 ## 4. Training the Model
 
