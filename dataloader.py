@@ -85,33 +85,11 @@ def create_dataloaders(
 
     # exclude={4, 6, 173, 175, 211, 232, 293, 319, 344, 378, 381, 391, 427, 461}
     all_subjects =[i for i in range(1, len(labels)+1) if i not in exclude_list] # Excluding Subjects which does not have proper shape
-
-    # trainval_subjs, test_subjs = train_test_split(
-    #     all_subjects,
-    #     test_size=test_size,
-    #     random_state=random_state
-    # )
-    # test_ds  = BRDataset(test_subjs,  label_data_dir, feature_data_dir, cluster_data_dir)   
-    # full_ds=BRDataset(trainval_subjs, label_data_dir, feature_data_dir, cluster_data_dir)
     trainval_subjs=np.array(all_subjects)
-    
-
-    # test_loader = DataLoader(
-    #     test_ds,
-    #     batch_size=batch_size,
-    #     shuffle=False,
-    #     num_workers=num_workers,
-    # )
-    # full_loader=DataLoader(
-    #     full_ds,
-    #     batch_size=batch_size,
-    #     shuffle=False,
-    #     num_workers=num_workers
-    # )
 
     skf=StratifiedKFold(n_splits=config['n_split'],shuffle=True, random_state=random_state)
     folds=[]
-    trainval_labels=labels
+    trainval_labels=labels[trainval_subjs-1]
     for fold_id, (tr_idx,val_idx) in enumerate(skf.split(trainval_subjs,trainval_labels)):
         train_ids=trainval_subjs[tr_idx]
         val_ids=trainval_subjs[val_idx]

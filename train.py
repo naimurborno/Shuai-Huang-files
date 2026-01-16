@@ -151,14 +151,6 @@ if __name__ == "__main__":
             if val_acc > fold_best_val_acc:
                 fold_best_val_acc = val_acc
                 fold_best_metrics = current_metrics
-                fold_model_path = os.path.join(config['output_dir'], f"best_fold_{fold+1}.pt")
-                torch.save(model.state_dict(), fold_model_path)
-                
-                # Check if this is the best model OVERALL folds for the final test set
-                if val_acc > absolute_best_val_acc:
-                    absolute_best_val_acc = val_acc
-                    best_overall_model_path = fold_model_path
-                    best_pca_model = pca_model
 
             if early_stoper.stop:
                 print("Early stopping triggered for this fold.")
@@ -173,12 +165,14 @@ if __name__ == "__main__":
     csv_path = os.path.join(config['output_dir'], "all_epochs_metrics.csv")
     metrics_df.to_csv(csv_path, index=False)
     
-    # Calculate Cross-Validation Stats using only the best from each fold
+
     cv_acc_mean = best_metrics_df['val_acc'].mean()
     cv_acc_std = best_metrics_df['val_acc'].std()
     
     print(f"\nFinal CV Results (Best Epoch per Fold):")
     print(f"Val Accuracy: {cv_acc_mean:.2f} ± {cv_acc_std:.2f}")
-    print(f"Val AUROC: {100*best_metrics_df['val_AUROC'].mean():.2f} ± {best_metrics_df['val_AUROC'].std():.2f}")
+    print(f"Val AUROC: {100*best_metrics_df['val_AUROC'].mean():.2f} ± {100*best_metrics_df['val_AUROC'].std():.2f}")
+    print(f"Val Sensitivity: {100*best_metrics_df['val_sensitivity'].mean():.2f} ± {100*best_metrics_df['val_sensitivity'].std():.2f}")
+    print(f"Val Specificity: {100*best_metrics_df['val_specificity'].mean():.2f} ± {100*best_metrics_df['val_specificity'].std():.2f}")
     
     plot_training_curves(metrics_df, save_dir=config['output_dir'])
