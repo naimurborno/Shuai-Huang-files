@@ -31,6 +31,7 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu") 
     os.makedirs(config['output_dir'], exist_ok=True)
     
+    #Findding out subjects without proper shape
     exclude_list = []
     dataset_len = 0
     for i in os.listdir(config['feature_data_dir']):
@@ -42,6 +43,8 @@ if __name__ == "__main__":
             dataset_len -= 1
     print(f"Subjects without proper shape: {exclude_list}")
 
+
+    
     folds, test_loader, full_loader = create_dataloaders(
                                             label_data_dir=config['label_data_dir'],
                                             feature_data_dir=config['feature_data_dir'],
@@ -209,6 +212,6 @@ if __name__ == "__main__":
     
     print(f"\nFinal CV Results (Best Epoch per Fold):")
     print(f"Val Accuracy: {cv_acc_mean:.2f} ± {cv_acc_std:.2f}")
-    print(f"Val AUROC: {best_metrics_df['val_AUROC'].mean():.2f} ± {best_metrics_df['val_AUROC'].std():.2f}")
+    print(f"Val AUROC: {100*best_metrics_df['val_AUROC'].mean():.2f} ± {best_metrics_df['val_AUROC'].std():.2f}")
     
     plot_training_curves(metrics_df, save_dir=config['output_dir'])

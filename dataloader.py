@@ -93,7 +93,7 @@ def create_dataloaders(
     )
     test_ds  = BRDataset(test_subjs,  label_data_dir, feature_data_dir, cluster_data_dir)   
     full_ds=BRDataset(trainval_subjs, label_data_dir, feature_data_dir, cluster_data_dir)
-    trainval_subjs=np.array(trainval_subjs)
+    trainval_subjs=np.array(all_subjects)
     
 
     test_loader = DataLoader(
@@ -111,7 +111,7 @@ def create_dataloaders(
 
     skf=StratifiedKFold(n_splits=config['n_split'],shuffle=True, random_state=random_state)
     folds=[]
-    trainval_labels=labels[trainval_subjs-1]
+    trainval_labels=labels
     for fold_id, (tr_idx,val_idx) in enumerate(skf.split(trainval_subjs,trainval_labels)):
         train_ids=trainval_subjs[tr_idx]
         val_ids=trainval_subjs[val_idx]
