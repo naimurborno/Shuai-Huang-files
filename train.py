@@ -86,7 +86,7 @@ if __name__ == "__main__":
             #Training Phase
             for batch in loop:
                 features = batch['features'].to(device).to(torch.float32)
-                features = apply_pca(features, pca_model=pca_model, train_data=True) #Applying PCA To Reduce Dimensionality
+                features = apply_pca(features, pca_model=pca_model) #Applying PCA To Reduce Dimensionality
 
                 labels = (batch['label']-1).long().to(device)
                 cluster_map = batch['cluster_map'].to(device).to(torch.long)
@@ -116,7 +116,7 @@ if __name__ == "__main__":
             with torch.no_grad():
                 for batch in val_loader:
                     features = batch['features'].to(device).to(torch.float32)
-                    features = apply_pca(features, pca_model=pca_model, train_data=False)  
+                    features = apply_pca(features, pca_model=pca_model)  
 
                     labels = (batch['label']-1).long().to(device)
                     cluster_map = batch['cluster_map'].to(device).to(torch.long)
