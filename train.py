@@ -173,4 +173,4 @@ if __name__ == "__main__":
     print(f"Val Sensitivity: {100*best_metrics_df['val_sensitivity'].mean():.2f} ± {100*best_metrics_df['val_sensitivity'].std():.2f}")
     print(f"Val Specificity: {100*best_metrics_df['val_specificity'].mean():.2f} ± {100*best_metrics_df['val_specificity'].std():.2f}")
     
-    # plot_training_curves(metrics_df, save_dir=config['output_dir'])
+  
