@@ -95,5 +95,3 @@ The training script will automatically load the processed data and begin trainin
 * The model assumes **binary classification**.
 
 ---
-
-If something breaks, it is almost certainly due to an incorrect directory path or a missing file. Double-check those first.

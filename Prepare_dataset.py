@@ -29,15 +29,12 @@ def main():
     os.makedirs(cluster_dir,exist_ok=True)
     print(f"Processing directory: {source}")
     
-    # Single loop through all files
     for filename in os.listdir(source):
         file_path = os.path.join(source, filename)
         
-        # Only process files (skip directories) and .mat files
         if not os.path.isfile(file_path) or not filename.endswith('.mat'):
             continue
             
-        # Move feature files
         if filename.startswith('label'):
             shutil.move(file_path,dest)
         if filename.startswith('s_') and '_feature.mat' in filename:
@@ -47,14 +44,13 @@ def main():
             np.save(save_path, file)
 
             
-        # # Move cluster index files
         elif filename.startswith('s_') and '_cluster_index.mat' in filename:
             dest_path = os.path.join(cluster_dir, filename)
             file=loadmat(os.path.join(source, filename))
             save_path=os.path.join(cluster_dir, filename.split('.')[0])
             np.save(save_path,file)
     
-    print(f"\nDone! Files were organized.")
+    print(f"\nDone! Files Are organized.")
     print(f"Features folder: {features_dir}")
     print(f"Cluster_index_mat folder: {cluster_dir}")
     print(f"Label file folder: {os.path.join(dest,'label.mat')}")

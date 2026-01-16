@@ -15,7 +15,6 @@ from sklearn.model_selection import KFold
 from sklearn.metrics import accuracy_score, confusion_matrix, roc_auc_score
 from utils import plot_training_curves, EarlyStopping
 import os 
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 import train_config
 from dataloader import create_dataloaders
@@ -44,7 +43,7 @@ if __name__ == "__main__":
     print(f"Subjects without proper shape: {exclude_list}")
 
 
-    
+    # Creating Folds for K-fold Cross Validation
     folds= create_dataloaders(
                             label_data_dir=config['label_data_dir'],
                             feature_data_dir=config['feature_data_dir'],
@@ -53,11 +52,8 @@ if __name__ == "__main__":
                             exclude_list=exclude_list
                         )
     
-    metrics_records = []      # To store every epoch for plotting
-    best_metrics_per_fold = [] # To store only the best epoch per fold for final stats
-    absolute_best_val_acc = 0.0
-    best_overall_model_path = ''
-    best_pca_model = None
+    metrics_records = []
+    best_metrics_per_fold = [] 
 
     for fold, (train_loader, val_loader) in enumerate(folds):
         print(f"\nTraining for fold: {fold+1}")
@@ -87,9 +83,11 @@ if __name__ == "__main__":
             correct, total, running_loss = 0, 0, 0.0
             loop = tqdm(train_loader, desc=f"Fold {fold+1} Epoch [{epoch+1}/{config['Epochs']}]")
 
+            #Training Phase
             for batch in loop:
                 features = batch['features'].to(device).to(torch.float32)
-                features = apply_pca(features, pca_model=pca_model, train_data=True)
+                features = apply_pca(features, pca_model=pca_model, train_data=True) #Applying PCA To Reduce Dimensionality
+
                 labels = (batch['label']-1).long().to(device)
                 cluster_map = batch['cluster_map'].to(device).to(torch.long)
 
@@ -118,7 +116,8 @@ if __name__ == "__main__":
             with torch.no_grad():
                 for batch in val_loader:
                     features = batch['features'].to(device).to(torch.float32)
-                    features = apply_pca(features, pca_model=pca_model, train_data=False)
+                    features = apply_pca(features, pca_model=pca_model, train_data=False)  
+
                     labels = (batch['label']-1).long().to(device)
                     cluster_map = batch['cluster_map'].to(device).to(torch.long)
 
@@ -146,7 +145,6 @@ if __name__ == "__main__":
             }
             metrics_records.append(current_metrics)
 
-            # Check if this is the best epoch for the CURRENT fold
             improved = early_stoper.step(val_acc)
             if val_acc > fold_best_val_acc:
                 fold_best_val_acc = val_acc
@@ -175,4 +173,4 @@ if __name__ == "__main__":
     print(f"Val Sensitivity: {100*best_metrics_df['val_sensitivity'].mean():.2f} ± {100*best_metrics_df['val_sensitivity'].std():.2f}")
     print(f"Val Specificity: {100*best_metrics_df['val_specificity'].mean():.2f} ± {100*best_metrics_df['val_specificity'].std():.2f}")
     
-    plot_training_curves(metrics_df, save_dir=config['output_dir'])
+    # plot_training_curves(metrics_df, save_dir=config['output_dir'])
