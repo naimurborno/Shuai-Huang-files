@@ -167,7 +167,7 @@ if __name__ == "__main__":
     cv_acc_mean = best_metrics_df['val_acc'].mean()
     cv_acc_std = best_metrics_df['val_acc'].std()
     
-    print(f"\nFinal CV Results (Best Epoch per Fold):")
+    print(f"\nFinal Cross Validation Results:")
     print(f"Val Accuracy: {cv_acc_mean:.2f} ± {cv_acc_std:.2f}")
     print(f"Val AUROC: {100*best_metrics_df['val_AUROC'].mean():.2f} ± {100*best_metrics_df['val_AUROC'].std():.2f}")
     print(f"Val Sensitivity: {100*best_metrics_df['val_sensitivity'].mean():.2f} ± {100*best_metrics_df['val_sensitivity'].std():.2f}")

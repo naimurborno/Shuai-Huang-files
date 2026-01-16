@@ -82,7 +82,7 @@ Please install this package before starting training
 pip install torch_pca
 ```
 
-## 4. Training the Model
+## 5. Training the Model
 
 Once the dataset is prepared and `train_config.py` is properly configured, start training by running:
 
@@ -94,10 +94,8 @@ The training script will automatically load the processed data and begin trainin
 
 ---
 
-## 5. Notes
-
+## 6. Notes
 * Do **not** skip the dataset preparation step. The training code will not work with raw `.mat` files.
 * Ensure all paths in `train_config.py` are correct and absolute if possible.
 * The model assumes **binary classification**.
-
 ---
