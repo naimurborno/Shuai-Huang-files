@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch_pca import PCA
+from ptdec.dec import DEC 
 import train_config
 config = train_config.config
 class FFN(nn.Module):
@@ -65,9 +66,13 @@ class AtlasFreeBrainTransformer(nn.Module):
         embed_dim=360,
         num_heads=4,
         depth=2,
-        num_classes=2
+        num_classes=2,
+        encoder_hidden_size = 32,
+        cluster_num = 50
     ):
         super().__init__()
+        self.hidden_dim=360
+        self.num_grid=5096
         self.ffn = FFN(         
             in_dim=roi_feat_dim,
             out_dim=embed_dim
@@ -79,6 +84,7 @@ class AtlasFreeBrainTransformer(nn.Module):
             num_heads=num_heads,
             depth=depth
         )
+        self.pos_embed=nn.Parameter(torch.zeros(1, 1000, embed_dim))
 
         self.classifier = nn.Sequential(
             nn.Linear(embed_dim, 256),
@@ -89,11 +95,19 @@ class AtlasFreeBrainTransformer(nn.Module):
             nn.Dropout(0.5),
             nn.Linear(128,num_classes)
         )
+        self.encoder = nn.Sequential(
+            nn.Linear(self.hidden_dim * self.num_grid, encoder_hidden_size),
+            nn.LeakyReLU(),
+            nn.Linear(encoder_hidden_size, encoder_hidden_size),
+            nn.LeakyReLU(),
+            nn.Linear(encoder_hidden_size, self.hidden_dim * self.num_grid),
+        )
+        self.dec = DEC(cluster_number=cluster_num, hidden_dimension=self.hidden_dim, encoder=self.encoder, orthogonal=True, freeze_center=True, project_assignment=True)
 
     def forward(self, F_roi, C):
-        F_emb = self.ffn(F_roi)  # (B, 400, 512)-> (B, 400, D) Passing Connectivity feature vector
+        F_emb = self.ffn(F_roi)  # (B, 400, 512)-> (B, 400, 360) Passing Connectivity feature vector
 
-        Q = construct_brain_map(C, F_emb)  # (B, 45, 54, 45, D) Constructing Multi Channel Brain Map
+        Q = construct_brain_map(C, F_emb)  # (B, 45, 54, 45, 360) Constructing Multi Channel Brain Map
 
         Q=Q.permute(0,4,1,2,3)
 
@@ -101,8 +115,8 @@ class AtlasFreeBrainTransformer(nn.Module):
 
         tokens = self.transformer(tokens)  # (B, N, D) #Multi Head Self Attention Transformer
 
-        h = tokens.mean(dim=1)  # (B, D) Subject Level Feature Vector
-
+        h ,_ = self.dec(tokens)  # (B, D) Subject Level Feature Vector
+        h=h.mean(dim=1)
         out = self.classifier(h) # Classifier head
         
         return out
